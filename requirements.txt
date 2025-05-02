@@ -1,0 +1,11 @@
+streamlit
+pandas
+numpy
+yfinance
+plotly
+requests
+google-generativeai
+python-dotenv
+scikit-learn
+tensorflow
+googletrans==4.0.0rc1
