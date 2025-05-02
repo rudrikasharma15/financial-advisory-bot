@@ -1,11 +1,11 @@
-# API keys for financial advisor app
+# API keys for Financial Advisory Bot (add your keys below)
 
 # News APIs
-GNEWS_API_KEY=0d016c8923237db57ba3d78e573a1dd8
-NEWS_API_KEY=your_newsapi_key_here
+GNEWS_API_KEY=your_gnews_api_key
+NEWS_API_KEY=your_newsapi_key
 
-# Macroeconomic Data
-FRED_API_KEY=3ca7694ff7fa9cace8a9824c1eb107c5
+# Macroeconomic Data (FRED)
+FRED_API_KEY=your_fred_api_key
 
-# Gemini / AI Assistant
-GEMINI_API_KEY=your_gemini_api_key_here
+# Gemini AI Assistant
+GEMINI_API_KEY=your_gemini_api_key
