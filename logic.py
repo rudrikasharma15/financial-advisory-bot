@@ -23,7 +23,14 @@ from tensorflow.keras.layers import Bidirectional
 
 import google.generativeai as genai
 
-genai.configure(api_key="AIzaSyBpyHcpblt_7izV78kVvXujmvYKAA2O2lY")
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+genai.configure(api_key=GEMINI_API_KEY)
+
+NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 
 def get_general_financial_advice(query):
     try:
@@ -96,7 +103,6 @@ def get_stock_data(symbols, lookback=30):
 import requests
 
 def fetch_stock_news(symbol, max_articles=3):
-    API_KEY = "44b9c3a7df514120b52b4e177c95e845"
     url = f"https://newsapi.org/v2/everything?q={symbol}&apiKey={API_KEY}&language=en"
     response = requests.get(url)
     articles = response.json().get("articles", [])[:max_articles]
