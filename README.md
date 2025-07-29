@@ -53,7 +53,7 @@ financial-dashboard/
 ### 1. Clone the repository
 
 ```bash
-git clone git@github.com:rudrikasharma15/financial-advisory-bot.git
+git clone https://github.com/rudrikasharma15/financial-advisory-bot.git
 cd financial-advisory-bot
 ```
 
