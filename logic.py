@@ -42,7 +42,7 @@ LOOKBACK = 30  # Reduced to ensure sufficient data
 TRAIN_SPLIT = 0.9
 ALERTS = {}
 PORTFOLIO = {}
-TRANSLATOR = Translator()
+TRANSLATOR = GoogleTranslator(source='auto', target='en')
 ALTERNATIVE_STOCKS = ['MSFT', 'GOOGL', 'JPM']
 
 # ------------------ DATA FETCH ------------------
