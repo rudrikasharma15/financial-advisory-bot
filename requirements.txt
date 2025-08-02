@@ -7,3 +7,4 @@ matplotlib
 requests
 python-dotenv
 scikit-learn
+tensorflow
