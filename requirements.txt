@@ -3,6 +3,7 @@ pandas
 numpy
 yfinance
 plotly
+matplotlib
 requests
 google-generativeai
 python-dotenv
