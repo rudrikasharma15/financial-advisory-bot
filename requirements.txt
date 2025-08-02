@@ -10,3 +10,4 @@ python-dotenv
 scikit-learn
 tensorflow
 googletrans==4.0.0rc1
+httpx==0.23.0
