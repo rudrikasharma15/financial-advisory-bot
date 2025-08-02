@@ -10,7 +10,7 @@ from tensorflow.keras.layers import LSTM, Dense, Dropout, Input
 from tensorflow.keras.optimizers import Adam
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from googletrans import Translator
+from deep_translator import GoogleTranslator
 from tensorflow.keras.layers import Bidirectional
 
 import google.generativeai as genai
