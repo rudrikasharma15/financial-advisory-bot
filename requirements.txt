@@ -9,3 +9,4 @@ python-dotenv
 scikit-learn
 tensorflow
 deep-translator
+google-generativeai
