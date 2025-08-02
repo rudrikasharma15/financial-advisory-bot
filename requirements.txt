@@ -8,3 +8,4 @@ requests
 python-dotenv
 scikit-learn
 tensorflow
+googletrans==4.0.0rc1
