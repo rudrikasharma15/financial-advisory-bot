@@ -3,7 +3,6 @@
 
 Welcome to your all-in-one **AI-powered financial dashboard**.  
 This app blends deep learning, macroeconomic context, real-time stock insights, and conversational Gemini AI — all inside a clean Streamlit UI.
-Deployed link: https://financial-advisory-botgit-f7ufjegsnje6acxvg9b6ke.streamlit.app/
 ---
 
 ## 🚀 Features
@@ -83,6 +82,7 @@ streamlit run streamlit_app.py
 ```
 
 ---
+Deployed link: https://financial-advisory-botgit-f7ufjegsnje6acxvg9b6ke.streamlit.app/
 
 ## 🙋‍♀️ Author
 
