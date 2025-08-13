@@ -1,96 +1,197 @@
-
 # 🤖📊 Streamlit Financial Advisory Bot
 
-Welcome to your all-in-one **AI-powered financial dashboard**.  
-This app blends deep learning, macroeconomic context, real-time stock insights, and conversational Gemini AI — all inside a clean Streamlit UI.
+Welcome to the **Streamlit Financial Advisory Bot**, an open-source, AI-powered financial dashboard that blends deep learning, macroeconomic insights, real-time stock data, and conversational AI within a sleek Streamlit interface.
+This project empowers users with financial tools and insights while welcoming contributions from the open-source community.
+
+---
+
+## 🌐 Live Demo
+Experience the app in action with our live deployment:
+
+[Try the Live Demo](https://financial-advisory-botgit-f7ufjegsnje6acxvg9b6ke.streamlit.app/)
+
 ---
 
 ## 🚀 Features
 
-| Feature                      | Description                                                                |
-|------------------------------|----------------------------------------------------------------------------|
-| 📊 Stock Dashboard           | Visualize and predict stock prices with trend, RSI, and risk indicators    |
-| 📈 LSTM Forecasting          | Combines technical + macro data using deep learning (LSTM) models          |
-| 📉 RSI & Strategy Engine     | Detects overbought/oversold conditions and offers smart suggestions        |
-| 📰 Stock News Summarizer     | Fetches live news via NewsAPI + GNews for each stock                       |
-| 💬 Gemini Finance Chatbot    | Ask questions like: *"Is now a good time to invest in AAPL?"*              |
-| 📦 Live Portfolio Tracking   | View real-time valuation of your stock portfolio                          |
-| 🎯 Savings Goal Planner      | Calculate monthly savings needed to reach your financial targets           |
-| 📥 Export Tools              | Download CSV reports and view candlestick trend charts                    |
-| 🔐 Secure Key Management     | API keys loaded via `.env` — safe for open-source publishing               |
+| Feature                  | Description |
+|--------------------------|-------------|
+| 📊 **Stock Dashboard**   | Visualize stock prices with trend, RSI, and risk indicators |
+| 📈 **LSTM Forecasting**  | Predicts prices using deep learning (LSTM) with technical and macro data |
+| 📉 **RSI & Strategy Engine** | Detects overbought/oversold conditions and provides investment suggestions |
+| 📰 **Stock News Summarizer** | Fetches and summarizes live news via NewsAPI and GNews for selected stocks |
+| 💬 **Gemini Finance Chatbot** | Ask financial questions like: `"Is now a good time to invest in AAPL?"` |
+| 📦 **Portfolio Tracking** | View real-time valuation of your stock portfolio |
+| 🎯 **Savings Goal Planner** | Calculate monthly savings needed to reach your financial goals |
+| 📥 **Export Tools** | Export CSV reports and view candlestick trend charts |
+| 🔐 **Secure Key Management** | Safely manage API keys via `.env` (excluded from Git) |
+
+---
+
+## 📸 Screenshots
+
+Explore the app’s interface, including the stock dashboard, Gemini chatbot, and more:
+
+[View All Screenshots](https://github.com/rudrikasharma15/financial-advisory-bot/tree/main/screenshots)
 
 ---
 
 ## 🧠 Tech Stack
 
-- **Streamlit** – Interactive web app framework
-- **Gemini AI** – Conversational assistant for finance queries
-- **TensorFlow + Keras** – LSTM model for price forecasting
-- **FRED API** – Macroeconomic indicators: GDP, Inflation, Fed Rates
-- **yFinance** – Historical stock data from Yahoo Finance
-- **NewsAPI / GNews** – Real-time news aggregation
-- **Python-Dotenv** – Secure API key management
+- **Streamlit** – Interactive web app framework  
+- **Gemini AI** – Conversational AI for financial queries  
+- **TensorFlow + Keras** – LSTM models for price forecasting  
+- **FRED API** – Macroeconomic data (GDP, Inflation, Fed Rates)  
+- **yFinance** – Historical and real-time stock data  
+- **NewsAPI / GNews** – Real-time news aggregation  
+- **python-dotenv** – Secure API key management  
 
 ---
 
 ## 📁 Project Structure
 
 ```bash
-financial-dashboard/
-├── streamlit_app.py         # Streamlit frontend
+financial-advisory-bot/
+├── .devcontainer/           # Dev container configuration for development environments
+├── .streamlit/              # Streamlit configuration (e.g., secrets.toml)
+├── __pycache__/             # Python cache files (excluded via .gitignore)
+├── screenshots/             # Screenshots of the app (e.g., dashboard, chatbot)
+├── .DS_Store                # macOS system file (excluded via .gitignore)
+├── .gitignore               # Excludes .env, Python cache, and other artifacts
+├── CODE_OF_CONDUCT.md       # Contributor Covenant Code of Conduct
+├── CONTRIBUTING.md          # Contribution guidelines
+├── LICENSE                  # MIT License
+├── README.md                # Project documentation
+├── debug_stock_fetch.py     # Debugging script for stock data fetching
 ├── logic.py                 # LSTM, macro, news, and Gemini logic
-├── .env                     # 🔐 API keys (not tracked in Git)
-├── .gitignore               # Excludes .env and Python cache
 ├── requirements.txt         # Python dependencies
-└── README.md                # You’re reading it
+├── runtime.txt              # Specifies Python runtime version for deployment
+├── streamlit_app.py         # Streamlit frontend
+├── test_stock_fetch.py      # Unit tests for stock fetching functionality
+├── yolo.txt                 # Miscellaneous file (purpose TBD)
+├── yoloAchievement.txt      # Miscellaneous file (purpose TBD)
+└── .env                     # 🔐 API keys (not tracked in Git)
 ```
 
 ---
 
 ## ⚙️ Setup Instructions
 
-### 1. Clone the repository
-
+### **Prerequisites**
+- Python **3.8+**
+- (Recommended) Virtual environment setup:
 ```bash
-git clone https://github.com/rudrikasharma15/financial-advisory-bot.git
-cd financial-advisory-bot
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-### 2. Install dependencies
+---
+
+### Steps
+1. 📥 Clone the Repository
+
+```bash
+     git clone https://github.com/rudrikasharma15/financial-advisory-bot.git
+     cd financial-advisory-bot
+```
+
+2. 📦 Install Dependencies
+
+```bash
+     pip install -r requirements.txt
+```
+
+3. 🔑 Set Up API Keys
+
+    Create a `.env` file in the project root:
+
+```env
+    GEMINI_API_KEY=your_gemini_key
+    NEWS_API_KEY=your_newsapi_key
+    GNEWS_API_KEY=your_gnews_key
+    FRED_API_KEY=your_fred_key
+```
+
+4. 🚀 Run the App Locally
+
+ ```bash
+    streamlit run streamlit_app.py
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions from the open-source community!  
+Especially newcomers and GSSoC'25 participants! This project is a great place to start with open-source contributions. 
+See our [CONTRIBUTING.md](https://github.com/rudrikasharma15/financial-advisory-bot/blob/main/CONTRIBUTING.md) for detailed guidelines.
+
+### Quick Start
+
+1. Fork and Clone Your Fork:
+
+ ```bash
+     git clone https://github.com/<your-username>/financial-advisory-bot.git
+     cd financial-advisory-bot
+ ```
+
+2. Create a Branch:
+
+ ```bash
+     git checkout -b feature/your-feature-name
+ ```
+
+3. Make changes, Commit and Push:
+
+ ```bash
+    git commit -m "Add your descriptive commit message"
+    git push origin feature/your-feature-name
+ ```
+
+4. Submit a Pull Request: Open a pull request on GitHub, referencing any related [issues](https://github.com/rudrikasharma15/financial-advisory-bot/issues).
+ 
+---
+
+## 🛠 Development Setup
 
 ```bash
 pip install -r requirements.txt
+pip install pytest flake8 black
 ```
 
-### 3. Add your API keys in a `.env` file
-
-```ini
-GEMINI_API_KEY=your_gemini_key
-NEWS_API_KEY=your_newsapi_key
-GNEWS_API_KEY=your_gnews_key
-FRED_API_KEY=your_fred_key
-```
-
-> ✅ `.env` is automatically excluded from GitHub via `.gitignore`
-
----
-
-### 4. Launch the app
+### Run tests
 
 ```bash
-streamlit run streamlit_app.py
+pytest
+```
+
+### Format code
+
+```bash
+black .
 ```
 
 ---
-Deployed link: https://financial-advisory-botgit-f7ufjegsnje6acxvg9b6ke.streamlit.app/
 
-## 🙋‍♀️ Author
+## 🛠 Troubleshooting (continued)
 
+- **API Key Errors** – Ensure your API keys are valid and correctly formatted in .env.
+- **Streamlit Not Running** – Verify Python 3.8+ and check for dependency conflicts (pip check).
+- **Dependency Issues** – Use a virtual environment to isolate dependencies.
+
+---
+
+## 👩‍💻 Author
 **Rudrika Sharma**  
-🔗 GitHub: [@rudrikasharma15](https://github.com/rudrikasharma15)
+🔗 [GitHub: @rudrikasharma15](https://github.com/rudrikasharma15)
 
 ---
 
 ## 📄 License
+This project is licensed under the [MIT License](https://github.com/rudrikasharma15/financial-advisory-bot/blob/main/License) – feel free to use, modify, and distribute with attribution.
 
-MIT License — free for personal and commercial use with attribution.
+---
+
+## 🌟 Acknowledgments
+Thanks to the open-source community for inspiration and support.  
+Powered by **Streamlit**, **TensorFlow**, and **Gemini AI**.
