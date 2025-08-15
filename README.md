@@ -199,10 +199,10 @@ Powered by **Streamlit**, **TensorFlow**, and **Gemini AI**. -->
   <img src="https://github.com/Adez017/financial-advisory-bot/blob/main/screenshots/logo.png" alt="Financial Advisory Bot Logo" width="200"/>
 </p>
 
-<h1 align="center">Financial Advisory Bot 🤖📊</h1>
+<h1 align="center">Arth.Ai 🤖📊</h1>
 
 <p align="center">
-  <strong>An open-source, AI-powered financial dashboard that combines deep learning, macroeconomic insights, real-time stock data, and conversational AI within a sleek Streamlit interface.</strong>
+  <strong>An open-source, AI-powered financial Advisor that combines deep learning, macroeconomic insights, real-time stock data, and conversational AI within a sleek Streamlit interface.</strong>
   <br />
   <br />
   <a href="https://financial-advisory-botgit-f7ufjegsnje6acxvg9b6ke.streamlit.app/"><strong>🚀 Try Live Demo</strong></a>
