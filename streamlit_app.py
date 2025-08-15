@@ -139,9 +139,9 @@ def process_stock_data(stock_data: pd.DataFrame, symbols: List[str]) -> Tuple[An
     return stock_data_processed, results
 
 # Config and Branding
-st.set_page_config(page_title="📊 Financial Advisory Bot", page_icon="💼", layout="wide")
+st.set_page_config(page_title="📊 Artha.ai", page_icon="💼", layout="wide")
 st.markdown('<style>.css-1d391kg{padding-top:0rem;}</style>', unsafe_allow_html=True)
-st.markdown('<h1 style="text-align :center; color:#2E86C1;">🤖 Financial Chatbot Assistant</h1>', unsafe_allow_html=True)
+st.markdown('<h1 style="text-align :center; color:#2E86C1;">🤖 Artha AI</h1>', unsafe_allow_html=True)
 
 # State
 if "dashboard_run" not in st.session_state:
@@ -157,7 +157,7 @@ if tab_options == "🏠 Home":
     st.markdown("## 🏠 Welcome")
     st.markdown("""
     <div style='font-size:18px;'>
-        Welcome to the <b>Financial Advisory Bot</b>. This tool helps you:
+        Welcome to the <b>Artha.ai</b>. This tool helps you:
         <ul>
             <li>💹 Predict future stock prices using deep learning</li>
             <li>📈 Analyze RSI, trends, and risks</li>
@@ -777,7 +777,7 @@ st.markdown("""
     <p style="color: #888; margin: 0;">
         📊 <strong>Financial Advisory Bot</strong> | Empowering Your Financial Decisions<br>
         Powered by Deep Learning & Gemini AI<br>
-        Developed by Your Name/Organization
+        Developed by Rudrika Sharma & Team
     </p>
     <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
         <small style="color: #666;">
