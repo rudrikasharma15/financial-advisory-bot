@@ -196,7 +196,7 @@ This project is licensed under the [MIT License](https://github.com/rudrikasharm
 Thanks to the open-source community for inspiration and support.  
 Powered by **Streamlit**, **TensorFlow**, and **Gemini AI**. -->
 <p align="center">
-  <img src="https://github.com/rudrikasharma15/financial-advisory-bot/blob/main/screenshots/logo.png" alt="Financial Advisory Bot Logo" width="200"/>
+  <img src="https://github.com/Adez017/financial-advisory-bot/blob/main/screenshots/logo.png" alt="Financial Advisory Bot Logo" width="200"/>
 </p>
 
 <h1 align="center">Financial Advisory Bot 🤖📊</h1>
