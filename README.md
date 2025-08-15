@@ -248,11 +248,11 @@ Experience the full power of our financial intelligence platform:
 
 ---
 
-## 📸 Interface Showcase
+## 📸 Interfaces Showcase
 
 Explore our intuitive dashboard design and powerful analytics interface:
 
-![Financial Advisory Bot Interface](https://github.com/rudrikasharma15/financial-advisory-bot/tree/main/screenshots)
+![Financial Advisory Bot Interfaces](https://github.com/rudrikasharma15/financial-advisory-bot/tree/main/screenshots)
 
 ---
 
