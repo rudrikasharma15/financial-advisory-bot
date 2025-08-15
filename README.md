@@ -305,6 +305,7 @@ Every technology was carefully selected for its strength in financial modeling, 
 
 <details>
   <summary><strong>Explore the Project Architecture</strong></summary>
+     
 ```
 financial-advisory-bot/
 ├── .devcontainer/           # Dev container configuration for development environments
