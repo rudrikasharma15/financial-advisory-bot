@@ -141,7 +141,7 @@ def process_stock_data(stock_data: pd.DataFrame, symbols: List[str]) -> Tuple[An
 # Config and Branding
 st.set_page_config(page_title="📊 Artha.ai", page_icon="💼", layout="wide")
 st.markdown('<style>.css-1d391kg{padding-top:0rem;}</style>', unsafe_allow_html=True)
-st.markdown('<h1 style="text-align :center; color:#2E86C1;">🤖 Artha AI</h1>', unsafe_allow_html=True)
+
 
 # State
 if "dashboard_run" not in st.session_state:
