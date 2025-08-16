@@ -629,11 +629,28 @@ elif tab_options == "⚠️ Risk Assessment":
             else:
                 st.warning("⚠️ No correlation data available for heatmap.")
 
+            # Automatic Correlation Analysis (New Feature)
+            st.subheader("Correlation Analysis")
+            if not correlation_matrix.empty:
+                # Calculate average correlation (upper triangle, excluding diagonal)
+                avg_correlation = correlation_matrix.values[np.triu_indices_from(correlation_matrix.values, k=1)].mean()
+                if np.isnan(avg_correlation):
+                    st.info("No significant correlation data to analyze. Your portfolio might have only one stock.")
+                elif avg_correlation > 0.7:
+                    st.warning(f"High average correlation ({avg_correlation:.2f}). This means your stocks tend to move together, increasing risk. Consider adding more diverse stocks to spread the risk.")
+                elif avg_correlation > 0.4:
+                    st.info(f"Moderate average correlation ({avg_correlation:.2f}). Your portfolio has some overlap, but it's okay. To lower risk further, add stocks that move independently.")
+                else:
+                    st.success(f"Low average correlation ({avg_correlation:.2f}). Great job! Your portfolio is well-diversified, which helps protect against market swings.")
+            else:
+                st.warning("⚠️ No correlation data to analyze.")
+
             # Risk level summary
             total_risk = sum(risk_scores.values()) if risk_scores else 0.0
             risk_level = "Low" if total_risk < 0.1 else "Moderate" if total_risk < 0.2 else "High"
             st.subheader("Risk Summary")
             st.write(f"Overall Risk Level: **{risk_level}** (Total Risk Score: {total_risk:.4f})")
+
 
 # --- Footer ---
 st.markdown("---")
