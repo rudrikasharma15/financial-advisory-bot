@@ -1,0 +1,270 @@
+Lets you enter your goal amount, current savings, months to save, and optional interest rate.
+Instantly calculates how much you need to save per month.
+Shows total interest earned if an interest rate is given.
+Displays a progress bar for how close you are to the goal.
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savings Goal Planner - Calculate Required Monthly Savings Needed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .card {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .progress-container {
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #48bb78 0%, #38a169 100%);
+            transition: width 0.6s ease;
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            background-image: linear-gradient(#667eea, #667eea);
+            background-size: 0% 100%;
+            background-repeat: no-repeat;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.1);
+        }
+        
+        .tooltip {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+        }
+        
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-gray-800 mb-3">Savings Goal Calculator</h1>
+            <p class="text-gray-600">Enter your target amount and timeframe to calculate monthly savings needed</p>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Input Card -->
+            <div class="card bg-white rounded-xl p-6">
+                <div class="space-y-6">
+                    <div class="relative">
+                        <label for="goalAmount" class="block text-sm font-medium text-gray-700 mb-1">Savings Goal ($)</label>
+                        <div class="relative mt-1 rounded-md shadow-sm">
+                            <input type="number" id="goalAmount" class="block w-full rounded-md border-gray-300 pl-3 pr-12 py-3 text-gray-900 border focus:ring-indigo-500 focus:border-indigo-500" placeholder="10000" min="1" step="50" value="10000">
+                        </div>
+                    </div>
+                    
+                    <div class="relative">
+                        <label for="currentSavings" class="block text-sm font-medium text-gray-700 mb-1">Current Savings ($)</label>
+                        <div class="relative mt-1 rounded-md shadow-sm">
+                            <input type="number" id="currentSavings" class="block w-full rounded-md border-gray-300 pl-3 pr-12 py-3 text-gray-900 border focus:ring-indigo-500 focus:border-indigo-500" placeholder="2000" min="0" step="50" value="2000">
+                        </div>
+                    </div>
+                    
+                    <div class="relative">
+                        <label for="timePeriod" class="block text-sm font-medium text-gray-700 mb-1">Time Period (Months)</label>
+                        <div class="mt-4">
+                            <input type="range" id="timePeriod" class="w-full" min="1" max="60" value="24">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>1 mo</span>
+                                <span>60 mo</span>
+                            </div>
+                            <div class="text-center mt-1">
+                                <span id="timeValue" class="text-sm font-medium text-gray-700">24 months</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="relative">
+                        <label for="interestRate" class="block text-sm font-medium text-gray-700 mb-1">Annual Interest Rate (%)</label>
+                        <div class="relative mt-1 rounded-md shadow-sm">
+                            <input type="number" id="interestRate" class="block w-full rounded-md border-gray-300 pl-3 pr-12 py-3 text-gray-900 border focus:ring-indigo-500 focus:border-indigo-500" placeholder="5" min="0" max="20" step="0.1" value="5">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <span class="text-gray-500">%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="calculateBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-md transition duration-150 ease-in-out">
+                        Calculate Monthly Savings
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Result Card -->
+            <div id="resultCard" class="card result-card rounded-xl p-6 hidden">
+                <div class="flex flex-col h-full">
+                    <h3 class="text-xl font-semibold mb-4">Your Savings Plan</h3>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <p class="text-sm">Monthly Savings</p>
+                            <p id="monthlySavings" class="text-xl font-bold">$333.33</p>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <p class="text-sm">Total Interest</p>
+                            <p id="totalInterest" class="text-xl font-bold">$1,200.00</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm mb-1">Progress Toward Goal</p>
+                        <p class="text-sm mb-2"><span id="currentPercentage">20</span>% of goal achieved</p>
+                        <div class="progress-container">
+                            <div id="progressBar" class="progress-bar" style="width: 20%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-auto">
+                        <p class="text-sm">You need to save <span id="resultText" class="font-bold">$333.33</span> per month for <span id="monthsText">24</span> months to reach your goal of <span id="goalText">$10,000.00</span>.</p>
+                        
+                        <div class="mt-6 flex justify-between">
+                            <div>
+                                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/4958c7ec-6743-478a-a8ab-556fb85767cf.png" alt="Savings target visualization" class="h-12">
+                            </div>
+                            <div>
+                                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/83ef7973-d082-4977-9ff0-82a9d2d17ab4.png" alt="Monthly contributions tracking" class="h-12">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update time period display
+            const timePeriodSlider = document.getElementById('timePeriod');
+            const timeValueDisplay = document.getElementById('timeValue');
+            
+            timePeriodSlider.addEventListener('input', function() {
+                const months = parseInt(this.value);
+                timeValueDisplay.textContent = months === 1 ? '1 month' : `${months} months`;
+            });
+            
+            // Calculate button click handler
+            document.getElementById('calculateBtn').addEventListener('click', calculateSavings);
+            
+            // Calculate savings function
+            function calculateSavings() {
+                const goalAmount = parseFloat(document.getElementById('goalAmount').value);
+                const currentSavings = parseFloat(document.getElementById('currentSavings').value);
+                const months = parseInt(document.getElementById('timePeriod').value);
+                const annualRate = parseFloat(document.getElementById('interestRate').value);
+                
+                // Validate inputs
+                if (isNaN(goalAmount) || isNaN(currentSavings) || isNaN(months) || isNaN(annualRate)) {
+                    alert('Please enter valid numbers in all fields');
+                    return;
+                }
+                
+                if (currentSavings >= goalAmount) {
+                    alert('You have already reached your savings goal!');
+                    return;
+                }
+                
+                // Calculate monthly savings with compound interest
+                const monthlyRate = annualRate / 100 / 12;
+                let monthlyPayment = 0;
+                
+                if (annualRate > 0) {
+                    monthlyPayment = (goalAmount - currentSavings * Math.pow(1 + monthlyRate, months)) / 
+                                    ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
+                } else {
+                    monthlyPayment = (goalAmount - currentSavings) / months;
+                }
+                
+                // Calculate total interest
+                const totalInterest = monthlyPayment > 0 ? 
+                    (monthlyPayment * months) - (goalAmount - currentSavings) : 
+                    0;
+                
+                // Update UI
+                document.getElementById('monthlySavings').textContent = `$${monthlyPayment.toFixed(2)}`;
+                document.getElementById('totalInterest').textContent = `$${totalInterest.toFixed(2)}`;
+                document.getElementById('resultText').textContent = `$${monthlyPayment.toFixed(2)}`;
+                document.getElementById('monthsText').textContent = months === 1 ? '1 month' : `${months} months`;
+                document.getElementById('goalText').textContent = `$${goalAmount.toFixed(2)}`;
+                
+                // Update progress
+                const percentage = Math.min(Math.round((currentSavings / goalAmount) * 100), 100);
+                document.getElementById('currentPercentage').textContent = percentage;
+                document.getElementById('progressBar').style.width = `${percentage}%`;
+                
+                // Show results
+                document.getElementById('resultCard').classList.remove('hidden');
+            }
+            
+            // Trigger calculation on Enter key in any input
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        calculateSavings();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
