@@ -451,7 +451,7 @@ if tab_options == "🎯 Goal Planner":
     with col_goal_name:
         goal_name = st.text_input(
             "✨ What are you saving for?", 
-            value=st.session_state.get('planner_goal_name', "My Dream Goal"),
+            value=st.session_state.get('planner_goal_name', ""), #default empty string
             placeholder="e.g., Dream Vacation, Retirement, New Car",
             key="planner_goal_name_input"
         )
@@ -459,8 +459,9 @@ if tab_options == "🎯 Goal Planner":
         current_savings = st.number_input(
             "💸 Current Savings (₹)", 
             min_value=0.0, 
-            value=st.session_state.get('planner_current_savings', 0.0), 
+            value=None if st.session_state.get('planner_current_savings') is None else st.session_state['planner_current_savings'], 
             format="%.2f",
+            placeholder="Example 500.00",
             key="planner_current_savings_input",
             help="The amount you currently have saved towards this goal."
         )
@@ -471,7 +472,8 @@ if tab_options == "🎯 Goal Planner":
         target_amount = st.number_input(
             "🎯 Target Amount (₹)", 
             min_value=1000.0, 
-            value=st.session_state.get('planner_target_amount', 1000000.0), 
+            value=None if st.session_state.get('planner_target_amount') is None else st.session_state['planner_target_amount'], 
+            placeholder="Example 10000.00",
             format="%.2f",
             key="planner_target_amount_input",
             help="The total amount you want to save."
@@ -761,13 +763,13 @@ if tab_options == "🎯 Goal Planner":
     ): 
         if st.button("🔄 Reset Goal Planner", key="reset_goal_plan_button"):
             st.session_state["planner_results"] = None
-            st.session_state['planner_goal_name'] = "My Dream Goal"
-            st.session_state['planner_current_savings'] = 0.0
-            st.session_state['planner_target_amount'] = 1000000.0
-            st.session_state['planner_years'] = 10
-            st.session_state['planner_annual_return'] = 7
+            st.session_state['planner_goal_name'] = ""
+            st.session_state['planner_current_savings'] = None
+            st.session_state['planner_target_amount'] = None
+            st.session_state['planner_years'] = None
+            st.session_state['planner_annual_return'] = None
             st.session_state.show_what_if = False # Reset what-if toggle
-            st.experimental_rerun()
+            st.rerun()
 
 
 # --- Footer ---
