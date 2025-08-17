@@ -392,7 +392,7 @@ We're building the future of accessible financial AI, and we need your help! Thi
 
 *   **Learn Cutting-Edge FinTech:** Work with LSTM models, real-time market data, and conversational AI.
 *   **Build Your Portfolio:** Contribute to a production-ready financial platform used by real users.
-*   **GSSoC '25 Friendly:** Designed specifically to welcome new contributors and open-source enthusiasts.
+*   **Open source '25 Friendly:** Designed specifically to welcome new contributors and open-source enthusiasts.
 
 ### Quick Start Guide
 
