@@ -1,152 +1,149 @@
+import sys
+import os
+import time
+from typing import Dict, Any, Optional, Tuple, List
 
 import streamlit as st
 import pandas as pd
-from PIL import Image
-from logic import (
-    fetch_stock_data, compute_rsi, get_general_financial_advice,
-    calculate_savings_goal, get_stock_data, add_technical_indicators,
-    get_mock_macro_features, prepare_model, predict_stocks, fetch_stock_news,
-    get_advice, calculate_risk, get_strategy
-)
+import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
 
-# Config and Branding
-st.set_page_config(page_title="📊 Financial Advisory Bot", page_icon="💼", layout="wide")
-st.markdown('<style>.css-1d391kg{padding-top:0rem;}</style>', unsafe_allow_html=True)
-st.markdown('<h1 style="text-align :center; color:#2E86C1;">🤖 Financial Chatbot Assistant</h1>', unsafe_allow_html=True)
+# ------------------------------------------------------------
+# Path safety: make sure local folder is importable
+# ------------------------------------------------------------
+try:
+    _this_file = __file__
+except NameError:
+    _this_file = ""
 
-# State
-if "dashboard_run" not in st.session_state:
-    st.session_state["dashboard_run"] = False
+_base_dir = os.path.dirname(os.path.abspath(_this_file)) if _this_file else os.getcwd()
+if _base_dir not in sys.path:
+    sys.path.append(_base_dir)
 
-# Sidebar Navigation
-tab_options = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📊 Stock Dashboard", "💬 Finance Bot", "🎯 Goal Planner"])
+# Import your login system
+from auth import auth_component
 
-# Home Tab
-if tab_options == "🏠 Home":
-    st.markdown("## 🏠 Welcome")
-    st.markdown("""
-    <div style='font-size:18px;'>
-        Welcome to the <b>Financial Advisory Bot</b>. This tool helps you:
-        <ul>
-            <li>💹 Predict future stock prices using deep learning</li>
-            <li>📈 Analyze RSI, trends, and risks</li>
-            <li>🧠 Get personalized advice via Gemini AI</li>
-            <li>🎯 Plan your savings based on your financial goals</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
 
-# Stock Dashboard Tab
-elif tab_options == "📊 Stock Dashboard":
-    st.markdown("## 📈 Stock Analysis & Predictions")
-    symbols_input = st.text_input("📥 Enter stock symbols (comma-separated)", "AAPL, MSFT", help="E.g., AAPL, GOOGL, MSFT")
-    start_btn = st.button("🔍 Analyze")
+# ------------------------------------------------------------
+# 1. Login / Signup first
+# ------------------------------------------------------------
+auth_status = auth_component()
 
-    if start_btn:
-        st.session_state["dashboard_run"] = True
+if not auth_status:
+    st.warning("Please login to access the app 🚪")
+    st.stop()
 
-    if st.session_state["dashboard_run"]:
-        symbols = [s.strip().upper() for s in symbols_input.split(",")]
-        stock_data = get_stock_data(symbols)
 
-        if stock_data is not None:
-            stock_data = add_technical_indicators(stock_data, symbols)
-            macro = get_mock_macro_features(stock_data.index)
-            model_result = prepare_model(symbols, stock_data, macro)
+# ------------------------------------------------------------
+# 2. Sidebar navigation
+# ------------------------------------------------------------
+st.sidebar.title("📌 Navigate")
+page = st.sidebar.radio("Go to", ["Home", "Stock Dashboard", "Finance Bot", "Goal Planner"])
 
-            if model_result:
-                model, scaler_X, scaler_y, combined_scaled, X_test, target_cols, y_test, train_size = model_result
-                results, evaluation = predict_stocks(model, scaler_X, scaler_y, combined_scaled, X_test, target_cols, y_test, train_size)
-                st.session_state["results"] = results
-                st.session_state["symbols"] = symbols
-                st.session_state["stock_data"] = stock_data
 
-                for symbol in symbols:
-                    st.markdown(f"### 📊 {symbol}")
-                    col1, col2 = st.columns([2, 1])
+# ------------------------------------------------------------
+# 3. Pages
+# ------------------------------------------------------------
 
-                    with col1:
-                        predicted = results[symbol]['predicted']
-                        actual = results[symbol]['actual']
-                        change_percentage = ((predicted[-1] - actual[-1]) / actual[-1]) * 100
-                        st.metric("📉 Predicted Price", f"₹{predicted[-1]:.2f}", f"{change_percentage:+.2f}%")
-                        st.metric("🎯 Actual Price", f"₹{actual[-1]:.2f}")
-                        st.line_chart(pd.DataFrame({"Predicted": predicted, "Actual": actual}))
+# Home
+if page == "Home":
+    st.title("🏡 Welcome to Your Financial Advisory Bot")
+    st.markdown(
+        """
+        ### What you can do here:
+        - 📊 Explore stock market data with interactive charts  
+        - 🤖 Chat with your personal **Finance Bot**  
+        - 🎯 Plan and track your financial goals  
+        """
+    )
 
-                    with col2:
-                        st.markdown("#### 🧮 Technical Analysis")
-                        rsi = compute_rsi(stock_data[symbol])
-                        rsi_value = rsi.dropna().iloc[-1]
-                        trend = "📈 Uptrend" if predicted[-1] > actual[-1] else "📉 Downtrend"
-                        rsi_status = "Overbought" if rsi_value > 70 else "Oversold" if rsi_value < 30 else "Neutral"
-                        risk = calculate_risk(symbol, stock_data, results)
-                        strategy = get_strategy(get_advice(predicted), risk)
-                        st.markdown(f"- **Trend**: {trend}\n- **RSI**: {rsi_value:.2f} ({rsi_status})\n- **Risk Score**: {risk:.2f}\n- **Strategy**: {strategy}")
 
-                    with st.expander(f"📊 RSI History - {symbol}"):
-                        st.line_chart(rsi)
+# Stock Dashboard
+elif page == "Stock Dashboard":
+    st.title("📊 Stock Dashboard")
 
-                    with st.expander(f"🗞️ Latest News - {symbol}"):
-                        st.markdown(fetch_stock_news(symbol))
+    st.write("Upload stock data (CSV) or use demo data:")
 
-                    st.download_button(
-                        label="📥 Download Data",
-                        data=pd.DataFrame({
-                            "Date": stock_data.index,
-                            "Predicted": predicted,
-                            "Actual": actual,
-                            "RSI": rsi
-                        }).to_csv(index=False),
-                        file_name=f"{symbol}_prediction.csv",
-                        mime="text/csv"
-                    )
+    uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+    else:
+        # Demo dataset
+        df = pd.DataFrame({
+            "Date": pd.date_range("2023-01-01", periods=30),
+            "Price": np.random.randint(100, 500, 30),
+            "Volume": np.random.randint(1000, 10000, 30)
+        })
 
-                    query_key = f"query_{symbol}"
-                    advice_key = f"advice_{symbol}"
-                    query = st.text_input(f"🤖 Ask Gemini about {symbol}:", key=query_key)
+    st.subheader("Raw Data")
+    st.dataframe(df)
 
-                    if st.button(f"Get Advice for {symbol}"):
-                        if query:
-                            try:
-                                advice = get_general_financial_advice(query, [symbol], stock_data, results)
-                                st.session_state[advice_key] = advice
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"Gemini error: {e}")
-                        else:
-                            st.warning("Please enter a question.")
+    # Price Trend
+    st.subheader("Stock Price Trend")
+    fig1 = px.line(df, x="Date", y="Price", title="Stock Price Over Time")
+    st.plotly_chart(fig1, use_container_width=True)
 
-                    if advice_key in st.session_state:
-                        st.markdown(f"🧠 Gemini's Advice:\n\n{st.session_state[advice_key]}")
+    # Volume Bar Chart
+    st.subheader("Trading Volume")
+    fig2 = px.bar(df, x="Date", y="Volume", title="Daily Trading Volume")
+    st.plotly_chart(fig2, use_container_width=True)
 
+
+# Finance Bot
+elif page == "Finance Bot":
+    st.title("🤖 Finance Bot")
+
+    st.markdown("💬 Ask me about **investments, savings, or stock basics**:")
+
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    user_input = st.text_input("Type your question:")
+    if st.button("Send") and user_input:
+        st.session_state.chat_history.append(("🧑 You", user_input))
+
+        # Simple built-in finance Q&A
+        if "stock" in user_input.lower():
+            bot_response = "📈 Stocks represent ownership in a company. Long-term investing usually reduces risk."
+        elif "mutual fund" in user_input.lower():
+            bot_response = "💼 A mutual fund pools money from many investors to buy diversified assets."
+        elif "savings" in user_input.lower():
+            bot_response = "💰 A good practice is to save at least 20% of your income."
+        elif "loan" in user_input.lower():
+            bot_response = "🏦 Loans should be managed carefully. Avoid EMIs exceeding 40% of your monthly income."
         else:
-            st.error("⚠️ Unable to fetch stock data. Please try again.")
+            bot_response = "🤔 I don’t have a detailed answer for that, but always diversify your portfolio."
 
-# Finance Bot Tab
-elif tab_options == "💬 Finance Bot":
-    st.subheader("💬 Ask Gemini Finance Bot")
-    query = st.text_input("🔍 Ask a financial question", key="general_query")
-    if st.button("Get Advice"):
-        if query:
-            try:
-                advice = get_general_financial_advice(query)
-                st.session_state["advice"] = advice
-            except Exception as e:
-                st.error(f"Error: {e}")
-        else:
-            st.warning("Please enter a query.")
-    if "advice" in st.session_state:
-        st.markdown(f"🧠 Gemini says:\n\n{st.session_state['advice']}")
+        st.session_state.chat_history.append(("🤖 Bot", bot_response))
 
-# Goal Planner Tab
-elif tab_options == "🎯 Goal Planner":
-    st.markdown("## 🎯 Financial Goal Planner")
-    target_amount = st.number_input("🎯 Target Amount (₹)", min_value=1000.0, value=100000.0)
-    years = st.slider("📆 Duration (years)", 1, 40, 10)
-    annual_return = st.slider("📈 Expected Annual Return (%)", 0, 15, 7)
-    if st.button("Calculate Plan"):
-        result = calculate_savings_goal(target_amount, years, annual_return)
-        st.success(
-            f"To reach ₹{result['target_amount']} in {result['years']} years at {result['annual_return']}% return, "
-            f"save ₹{result['monthly_saving']:.2f} monthly."
-        )
+    # Display chat
+    for sender, msg in st.session_state.chat_history:
+        st.markdown(f"**{sender}:** {msg}")
+
+
+# Goal Planner
+elif page == "Goal Planner":
+    st.title("🎯 Goal Planner")
+    st.write("Plan and track your financial goals with progress bars.")
+
+    if "goals" not in st.session_state:
+        st.session_state.goals = []
+
+    with st.form("goal_form", clear_on_submit=True):
+        goal = st.text_input("Enter a financial goal:")
+        amount = st.number_input("Target Amount (₹)", min_value=1000, step=1000)
+        submitted = st.form_submit_button("Add Goal")
+        if submitted and goal:
+            st.session_state.goals.append({"goal": goal, "amount": amount, "progress": 0})
+
+    if st.session_state.goals:
+        for idx, g in enumerate(st.session_state.goals):
+            st.subheader(f"🎯 {g['goal']}")
+            progress = st.slider(
+                f"Progress for {g['goal']}",
+                0, g["amount"], g["progress"],
+                key=f"progress_{idx}"
+            )
+            st.session_state.goals[idx]["progress"] = progress
+            st.progress(int(progress / g["amount"] * 100))
