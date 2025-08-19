@@ -1,5 +1,4 @@
 <!-- # 🤖📊 Streamlit Financial Advisory Bot
-[![OSCI-Project-Banner.png](https://i.postimg.cc/76mJvBmF/OSCI-Project-Banner.png)](https://postimg.cc/8JfzMb84)
 Welcome to the **Streamlit Financial Advisory Bot**, an open-source, AI-powered financial dashboard that blends deep learning, macroeconomic insights, real-time stock data, and conversational AI within a sleek Streamlit interface.
 This project empowers users with financial tools and insights while welcoming contributions from the open-source community.
 
@@ -199,7 +198,7 @@ Powered by **Streamlit**, **TensorFlow**, and **Gemini AI**. -->
   <img src="https://github.com/Adez017/financial-advisory-bot/blob/main/screenshots/logo.png" alt="Financial Advisory Bot Logo" width="200"/>
 </p>
 
-
+[![OSCI-Project-Banner.png](https://i.postimg.cc/76mJvBmF/OSCI-Project-Banner.png)](https://postimg.cc/8JfzMb84)
 
 <p align="center">
   <strong>An open-source, AI-powered financial Advisor that combines deep learning, macroeconomic insights, real-time stock data, and conversational AI within a sleek Streamlit interface.</strong>
