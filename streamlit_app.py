@@ -187,7 +187,7 @@ if "planner_results" not in st.session_state:
     st.session_state["planner_results"] = None # To store the calculated plan for persistence
 
 # Sidebar Navigation
-tab_options = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📊 Stock Dashboard", "💬 Finance Bot", "🎯 Goal Planner"])
+tab_options = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📊 Stock Dashboard", "💬 Finance Bot", "🎯 Goal Planner","💼 Portfolio Tracker"])
 
 # Home Tab
 if tab_options == "🏠 Home":
@@ -807,7 +807,117 @@ if tab_options == "🎯 Goal Planner":
             st.session_state['planner_annual_return'] = None
             st.session_state.show_what_if = False # Reset what-if toggle
             st.rerun()
+# Portfolio Tracking Tab
 
+if tab_options == "💼 Portfolio Tracker":
+    st.markdown("## 💼 Portfolio Tracker")
+
+    # Initialize portfolio if not present
+    if "portfolio" not in st.session_state:
+        st.session_state["portfolio"] = []
+
+    # Form to add new holdings
+    with st.form("add_holding"):
+        st.subheader("➕ Add a Stock to Your Portfolio")
+        symbol = st.text_input("Symbol (e.g., AAPL, MSFT, HDB)")
+        units = st.number_input("Units Owned", min_value=0.0, format="%.2f")
+        buy_price = st.number_input("Buy Price per Unit", min_value=0.0)
+        buy_date = st.date_input("Buy Date")
+        add_clicked = st.form_submit_button("Add to Portfolio")
+        if add_clicked and symbol.strip() and units > 0 and buy_price > 0:
+            st.session_state.portfolio.append({
+                "symbol": symbol.strip().upper(),
+                "units": units,
+                "buy_price": buy_price,
+                "buy_date": str(buy_date)
+            })
+            st.success(f"{symbol.strip().upper()} added to portfolio!")
+
+    # Display portfolio if any holdings
+    if st.session_state.portfolio:
+        df = pd.DataFrame(st.session_state.portfolio)
+        st.write("Your portfolio holdings:", df)
+
+        # Get symbols from portfolio
+        symbols = list(df["symbol"].unique())
+        
+        try:
+            # Fetch current prices
+            with st.spinner("Fetching current prices..."):
+                prices_df = get_stock_data(symbols)
+            
+            if prices_df is None or prices_df.empty:
+                st.warning("Could not fetch current price data. Please try again later.")
+                latest_prices = {sym: 0 for sym in symbols}
+            else:
+                # Get the latest price for each symbol
+                latest_prices = {}
+                for symbol in symbols:
+                    if symbol in prices_df.columns:
+                        latest_prices[symbol] = prices_df[symbol].iloc[-1]
+                    else:
+                        st.warning(f"Could not fetch price for {symbol}")
+                        latest_prices[symbol] = 0
+
+        except Exception as e:
+            st.error(f"Error fetching prices: {e}")
+            latest_prices = {sym: 0 for sym in symbols}
+
+        # Compute current metrics
+        df["Current Price"] = df["symbol"].map(latest_prices)
+        df["Current Value"] = df["Current Price"] * df["units"]
+        df["Investment Cost"] = df["buy_price"] * df["units"]
+        df["Abs Gain/Loss"] = df["Current Value"] - df["Investment Cost"]
+        df["% Gain/Loss"] = ((df["Current Price"] - df["buy_price"]) / df["buy_price"]) * 100
+
+        total_value = df["Current Value"].sum()
+        total_cost = df["Investment Cost"].sum()
+        total_gain_loss = total_value - total_cost
+        
+        if total_value > 0:
+            df["Allocation %"] = (df["Current Value"] / total_value * 100).fillna(0)
+        else:
+            df["Allocation %"] = 0
+
+        # Display portfolio summary
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Investment", f"₹{total_cost:,.2f}")
+        with col2:
+            st.metric("Current Value", f"₹{total_value:,.2f}")
+        with col3:
+            st.metric("Total Gain/Loss", f"₹{total_gain_loss:,.2f}", 
+                     f"{((total_value/total_cost)-1)*100:.2f}%" if total_cost > 0 else "0%")
+
+        # Display detailed portfolio
+        st.dataframe(
+            df.style.format({
+                "buy_price": "₹{:.2f}",
+                "Current Price": "₹{:.2f}",
+                "Current Value": "₹{:.2f}",
+                "Investment Cost": "₹{:.2f}",
+                "Abs Gain/Loss": "₹{:.2f}",
+                "% Gain/Loss": "{:.2f}%",
+                "Allocation %": "{:.2f}%",
+            })
+        )
+
+        # Allocation Pie Chart
+        if total_value > 0:
+            fig_alloc = px.pie(df, values="Current Value", names="symbol", 
+                              title="Portfolio Allocation by Symbol")
+            st.plotly_chart(fig_alloc, use_container_width=True)
+
+        # Download option for portfolio CSV
+        csv_data = df.to_csv(index=False)
+        st.download_button("📥 Download Portfolio Data", csv_data, "portfolio.csv", "text/csv")
+
+        if st.button("🗑️ Clear Portfolio"):
+            st.session_state.portfolio = []
+            st.rerun()
+
+    else:
+        st.info("➕ Add holdings above to start tracking your portfolio.")
 
 # --- Footer ---
 st.markdown("---")
