@@ -187,8 +187,7 @@ if "planner_results" not in st.session_state:
     st.session_state["planner_results"] = None # To store the calculated plan for persistence
 
 # Sidebar Navigation
-tab_options = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📊 Stock Dashboard", "💬 Finance Bot", "🎯 Goal Planner","💼 Portfolio Tracker"])
-
+tab_options = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📊 Stock Dashboard", "💬 Finance Bot", "🎯 Goal Planner","💼 Portfolio Tracker","💸 SIP and Lumpsum Calculator"])
 # Home Tab
 if tab_options == "🏠 Home":
     st.markdown("## 🏠 Welcome")
@@ -918,6 +917,74 @@ if tab_options == "💼 Portfolio Tracker":
 
     else:
         st.info("➕ Add holdings above to start tracking your portfolio.")
+if tab_options=="💸 SIP and Lumpsum Calculator":
+    st.markdown("## 📈 SIP & Lumpsum Investment Calculator")
+    st.markdown("Compare and visualize your investment outcomes using SIP and Lumpsum options with projected returns.")
+
+    st.subheader("💡 Investment Inputs")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        investment_type = st.radio("Choose Investment Type:", ["SIP", "Lumpsum"], horizontal=True)
+
+    with col2:
+        annual_return = st.slider("Expected Annual Return (%)", min_value=1, max_value=20, value=12)
+    
+    if investment_type == "SIP":
+        col_sip1, col_sip2 = st.columns(2)
+        with col_sip1:
+            monthly_investment = st.number_input("💰 Monthly Investment (₹)", min_value=500.0, value=5000.0, step=100.0)
+        with col_sip2:
+            duration_years = st.slider("⏳ Investment Duration (Years)", 1, 40, 10)
+    else:
+        col_lump1, col_lump2 = st.columns(2)
+        with col_lump1:
+            lumpsum_amount = st.number_input("💰 Lumpsum Amount (₹)", min_value=500.0, value=100000.0, step=500.0)
+        with col_lump2:
+            duration_years = st.slider("⏳ Investment Duration (Years)", 1, 40, 10)
+    
+    # Calculate returns
+    calculate_btn = st.button("📊 Calculate Returns")
+    if calculate_btn:
+        r = annual_return / 100
+        n = duration_years
+
+        if investment_type == "SIP":
+            fv = monthly_investment * (((1 + r / 12) ** (n * 12) - 1) * (1 + r / 12)) / (r / 12)
+            total_invested = monthly_investment * n * 12
+        else:
+            fv = lumpsum_amount * ((1 + r) ** n)
+            total_invested = lumpsum_amount
+
+        interest_earned = fv - total_invested
+
+        # Display metrics
+        st.subheader("📈 Investment Summary")
+        col_a, col_b, col_c = st.columns(3)
+        with col_a:
+            st.metric("Total Invested", f"₹{total_invested:,.2f}")
+        with col_b:
+            st.metric("Total Returns", f"₹{fv:,.2f}")
+        with col_c:
+            st.metric("Interest Earned", f"₹{interest_earned:,.2f}")
+
+        # Donut chart
+        fig = go.Figure(data=[go.Pie(
+            labels=["Invested", "Interest Earned"],
+            values=[total_invested, interest_earned],
+            hole=.5,
+            marker=dict(colors=["#10b981", "#6366f1"])
+        )])
+
+        fig.update_layout(
+            title="📊 Investment Composition",
+            showlegend=True,
+            template="plotly_dark"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+
 
 # --- Footer ---
 st.markdown("---")
