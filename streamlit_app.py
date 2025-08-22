@@ -489,7 +489,7 @@ if tab_options == "🎯 Goal Planner":
     with col_goal_name:
         goal_name = st.text_input(
             "✨ What are you saving for?", 
-            value=st.session_state.get('planner_goal_name', ""), #default empty string
+            value=st.session_state.get('planner_goal_name', ""), 
             placeholder="e.g., Dream Vacation, Retirement, New Car",
             key="planner_goal_name_input"
         )
@@ -532,6 +532,17 @@ if tab_options == "🎯 Goal Planner":
             key="planner_annual_return_input",
             help="The average annual interest rate you expect on your savings/investments."
         )
+
+    # --- Inflation Toggle and Slider ---
+    inflation_enabled = st.checkbox("Adjust for Inflation?", value=st.session_state.get("planner_inflation_enabled", False), key="planner_inflation_enabled")
+    inflation_rate = 0
+    if inflation_enabled:
+        inflation_rate = st.slider(
+            "Inflation Rate (%)",
+            min_value=0, max_value=15, value=5,
+            key="planner_inflation_rate",
+            help="Expected average annual inflation rate."
+        )
     
     # Store inputs in session state for persistence
     st.session_state['planner_goal_name'] = goal_name
@@ -541,7 +552,7 @@ if tab_options == "🎯 Goal Planner":
     st.session_state['planner_annual_return'] = annual_return
 
     run_calculation = st.button("🚀 Calculate My Plan", type="primary")
-    
+
     # Initialize session state for scenario comparison toggle
     if 'show_what_if' not in st.session_state:
         st.session_state.show_what_if = False
@@ -572,19 +583,17 @@ if tab_options == "🎯 Goal Planner":
 
         try:
             with st.spinner("Calculating your financial journey..."):
-                # Calculate monthly saving for the base plan
-                # This monthly_saving is typically the amount needed *if starting from zero*.
-                # The _simulate_goal_growth function will then correctly start from current_savings.
-                base_monthly_saving_calc = calculate_savings_goal(target_amount, years, annual_return)
+                # --- Adjust annual return for inflation if enabled ---
+                real_annual_return = annual_return - inflation_rate if inflation_enabled else annual_return
+
+                base_monthly_saving_calc = calculate_savings_goal(target_amount, years, real_annual_return)
                 base_monthly_saving = base_monthly_saving_calc.get('monthly_saving', 0.0)
-                
-                # If calculated monthly saving is very small or negative (due to high current savings / low target)
-                # Cap it at 0, as we can't 'save negative'
                 base_monthly_saving = max(0.0, base_monthly_saving)
 
-                # Simulate growth for the base plan
-                growth_df_base = _simulate_goal_growth(current_savings, base_monthly_saving, years, annual_return)
-                
+                growth_df_base = _simulate_goal_growth(current_savings, base_monthly_saving, years, real_annual_return)
+
+                final_balance_base = growth_df_base['Ending Balance'].iloc[-1] if not growth_df_base.empty else current_savings
+
                 # Check if goal is achievable with base monthly saving
                 final_balance_base = growth_df_base['Ending Balance'].iloc[-1] if not growth_df_base.empty else current_savings
                 
@@ -603,14 +612,14 @@ if tab_options == "🎯 Goal Planner":
                     'target_amount': target_amount,
                     'years': years,
                     'annual_return': annual_return,
+                    'inflation_enabled': inflation_enabled,
+                    'inflation_rate': inflation_rate,
+                    'real_annual_return': real_annual_return,
                     'base_monthly_saving': base_monthly_saving,
                     'growth_df_base': growth_df_base,
                     'final_balance_base': final_balance_base,
                     'base_is_achievable': base_is_achievable
                 }
-                # No need to rerun here, the code below will now pick up the updated state
-                # st.experimental_rerun() # Removed this, as the flow will now continue and display.
-
         except Exception as e:
             st.error(f"⚠️ An error occurred during calculation: {e}. Please check your inputs. Ensure your `logic.py`'s `calculate_savings_goal` function is robust.")
             st.session_state["planner_results"] = None # Clear results if error occurs
