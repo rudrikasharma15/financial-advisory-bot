@@ -177,6 +177,46 @@ def process_stock_data(stock_data: pd.DataFrame, symbols: List[str]) -> Tuple[An
 
 # Config and Branding
 st.set_page_config(page_title="📊 Artha.ai", page_icon="💼", layout="wide")
+
+# Custom CSS for sidebar
+st.markdown("""
+<style>
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+    div[data-testid="stRadio"] > div > label > div:first-of-type {
+        display: none;
+    }
+    div[data-testid="stRadio"] > div > label {
+        display: flex !important;
+        align-items: center;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem !important;
+        margin: 0.2rem 0;
+        transition: background-color 200ms ease-in-out, color 200ms ease-in-out;
+        cursor: pointer;
+        color: #FAFAFA;
+    }
+    div[data-testid="stRadio"] > div > label:hover {
+        background-color: #2E86C1;
+        color: white !important;
+    }
+
+    div[data-testid="stRadio"] > div > label:has(input:checked) {
+        background-color: #2E86C1;
+        color: white !important;
+    }
+    div[data-testid="stRadio"] > div > label::before {
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        margin-right: 0.75rem;
+    }
+    div[data-testid="stRadio"] > div > label:nth-of-type(1)::before { content: "\\f015"; }
+    div[data-testid="stRadio"] > div > label:nth-of-type(2)::before { content: "\\f201"; }
+    div[data-testid="stRadio"] > div > label:nth-of-type(3)::before { content: "\\f135"; }
+    div[data-testid="stRadio"] > div > label:nth-of-type(4)::before { content: "\\f0ae"; }
+
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown('<style>.css-1d391kg{padding-top:0rem;}</style>', unsafe_allow_html=True)
 st.markdown('<h1 style="text-align :center; color:#2E86C1;">🤖 Artha AI</h1>', unsafe_allow_html=True)
 
@@ -184,13 +224,13 @@ st.markdown('<h1 style="text-align :center; color:#2E86C1;">🤖 Artha AI</h1>',
 if "dashboard_run" not in st.session_state:
     st.session_state["dashboard_run"] = False
 if "planner_results" not in st.session_state:
-    st.session_state["planner_results"] = None # To store the calculated plan for persistence
+    st.session_state["planner_results"] = None
 
 # Sidebar Navigation
-tab_options = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📊 Stock Dashboard", "💬 Finance Bot", "🎯 Goal Planner"])
+tab_options = st.sidebar.radio("Navigate", ["Home", "Stock Dashboard", "Finance Bot", "Goal Planner"], label_visibility="collapsed")
 
 # Home Tab
-if tab_options == "🏠 Home":
+if tab_options == "Home":
     st.markdown("## 🏠 Welcome")
     st.markdown("""
     <div style='font-size:18px;'>
@@ -205,7 +245,7 @@ if tab_options == "🏠 Home":
     """, unsafe_allow_html=True)
 
 # Stock Dashboard Tab
-elif tab_options == "📊 Stock Dashboard":
+elif tab_options == "Stock Dashboard":
     st.markdown("## 📈 Stock Analysis & Predictions")
 
     # --- Initialize session state variables ---
@@ -420,7 +460,7 @@ elif tab_options == "📊 Stock Dashboard":
 
 
 # Finance Bot Tab
-elif tab_options == "💬 Finance Bot":
+elif tab_options == "Finance Bot":
     st.subheader("💬 Ask Gemini Finance Bot")
     query = st.text_input("🔍 Ask a financial question", key="general_query")
     if st.button("Get Advice"):
@@ -478,7 +518,7 @@ def _simulate_goal_growth(
 
 
 # Goal Planner Tab (Dynamic Version)
-if tab_options == "🎯 Goal Planner":
+if tab_options == "Goal Planner":
     st.markdown("## 🎯 Financial Goal Planner: Your Journey to Financial Freedom")
     st.markdown("Set your financial aspirations and let's calculate a dynamic plan to achieve them! See how your savings grow and explore different scenarios.")
 
