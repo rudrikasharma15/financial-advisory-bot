@@ -2,6 +2,7 @@
 import streamlit as st
 import json
 import os
+import random
 
 USER_FILE = "users.json"
 
@@ -16,6 +17,15 @@ def load_users():
 def save_users(users):
     with open(USER_FILE, "w") as f:
         json.dump(users, f)
+
+# Generate or get captcha question and answer
+def get_captcha():
+    if "captcha_a" not in st.session_state or "captcha_b" not in st.session_state:
+        st.session_state.captcha_a = random.randint(1, 10)
+        st.session_state.captcha_b = random.randint(1, 10)
+    question = f"{st.session_state.captcha_a} + {st.session_state.captcha_b} = ?"
+    answer = st.session_state.captcha_a + st.session_state.captcha_b
+    return question, answer
 
 def auth_component():
     # Initialize storage
@@ -44,14 +54,23 @@ def auth_component():
         username = st.text_input("Username", key="login_user")
         password = st.text_input("Password", type="password", key="login_pass")
 
+        question, answer = get_captcha()
+        captcha_input = st.text_input("Captcha: " + question, key="login_captcha")
+
         if st.button("Login"):
-            if username in st.session_state.users and st.session_state.users[username] == password:
-                st.session_state.logged_in = True
-                st.session_state.current_user = username
-                st.success("🎉 Login successful!")
-                st.rerun()
+            if captcha_input.strip() != str(answer):
+                st.error("⚠️ Captcha incorrect!")
+                # Refresh captcha
+                st.session_state.captcha_a = random.randint(1, 10)
+                st.session_state.captcha_b = random.randint(1, 10)
             else:
-                st.error("❌ Invalid username or password")
+                if username in st.session_state.users and st.session_state.users[username] == password:
+                    st.session_state.logged_in = True
+                    st.session_state.current_user = username
+                    st.success("🎉 Login successful!")
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid username or password")
 
     # --- SIGNUP ---
     with tabs[1]:
@@ -59,14 +78,22 @@ def auth_component():
         new_user = st.text_input("Choose a username", key="signup_user")
         new_pass = st.text_input("Choose a password", type="password", key="signup_pass")
 
-        if st.button("Sign Up"):
-            if new_user in st.session_state.users:
-                st.error("❌ Username already exists, choose another.")
-            elif new_user.strip() == "" or new_pass.strip() == "":
-                st.error("⚠️ Username and password cannot be empty.")
-            else:
-                st.session_state.users[new_user] = new_pass
-                save_users(st.session_state.users)
-                st.success("🎉 Account created! You can now login.")
+        question, answer = get_captcha()
+        captcha_input = st.text_input("Captcha: " + question, key="signup_captcha")
 
+        if st.button("Sign Up"):
+            if captcha_input.strip() != str(answer):
+                st.error("⚠️ Captcha incorrect!")
+                # Refresh captcha
+                st.session_state.captcha_a = random.randint(1, 10)
+                st.session_state.captcha_b = random.randint(1, 10)
+            else:
+                if new_user in st.session_state.users:
+                    st.error("❌ Username already exists, choose another.")
+                elif new_user.strip() == "" or new_pass.strip() == "":
+                    st.error("⚠️ Username and password cannot be empty.")
+                else:
+                    st.session_state.users[new_user] = new_pass
+                    save_users(st.session_state.users)
+                    st.success("🎉 Account created! You can now login.")
     return False
