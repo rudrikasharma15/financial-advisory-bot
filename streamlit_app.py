@@ -489,7 +489,7 @@ if tab_options == "🎯 Goal Planner":
     with col_goal_name:
         goal_name = st.text_input(
             "✨ What are you saving for?", 
-            value=st.session_state.get('planner_goal_name', ""), #default empty string
+            value=st.session_state.get('planner_goal_name', ""), 
             placeholder="e.g., Dream Vacation, Retirement, New Car",
             key="planner_goal_name_input"
         )
@@ -532,6 +532,17 @@ if tab_options == "🎯 Goal Planner":
             key="planner_annual_return_input",
             help="The average annual interest rate you expect on your savings/investments."
         )
+
+    # --- Inflation Toggle and Slider ---
+    inflation_enabled = st.checkbox("Adjust for Inflation?", value=st.session_state.get("planner_inflation_enabled", False), key="planner_inflation_enabled")
+    inflation_rate = 0
+    if inflation_enabled:
+        inflation_rate = st.slider(
+            "Inflation Rate (%)",
+            min_value=0, max_value=15, value=5,
+            key="planner_inflation_rate",
+            help="Expected average annual inflation rate."
+        )
     
     # Store inputs in session state for persistence
     st.session_state['planner_goal_name'] = goal_name
@@ -541,253 +552,58 @@ if tab_options == "🎯 Goal Planner":
     st.session_state['planner_annual_return'] = annual_return
 
     run_calculation = st.button("🚀 Calculate My Plan", type="primary")
-    
-    # Initialize session state for scenario comparison toggle
-    if 'show_what_if' not in st.session_state:
-        st.session_state.show_what_if = False
-
-    # Checkbox to toggle "What-If" scenario
-    # Only show checkbox if a calculation has been run (planner_results is not None)
-    # or if it was previously checked to maintain state
-    if st.session_state["planner_results"] is not None or st.session_state.show_what_if:
-        st.session_state.show_what_if = st.checkbox(
-            "🔮 Explore 'What-If' Scenarios?",
-            value=st.session_state.show_what_if, # Use session state value for persistence
-            help="Compare your base plan with an adjusted monthly saving scenario."
-        )
 
     if run_calculation:
-        if target_amount <= current_savings:
-            st.success(f"🎉 Great news! Your current savings of **₹{current_savings:,.2f}** already meet or exceed your target of **₹{target_amount:,.2f}** for **{goal_name}**!")
-            st.info("No additional monthly savings required if your goal is just to reach this amount. Consider setting a higher target!")
-            st.session_state["planner_results"] = None # Clear previous plan if goal met
-            st.session_state.show_what_if = False # Reset what-if
-            st.stop() # Stop further execution to avoid displaying charts
+        # --- Calculate WITHOUT inflation ---
+        real_annual_return_no_inflation = annual_return
+        base_monthly_saving_no_inflation = calculate_savings_goal(target_amount, years, real_annual_return_no_inflation).get('monthly_saving', 0.0)
+        growth_df_no_inflation = _simulate_goal_growth(current_savings, base_monthly_saving_no_inflation, years, real_annual_return_no_inflation)
+        final_balance_no_inflation = growth_df_no_inflation['Ending Balance'].iloc[-1] if not growth_df_no_inflation.empty else current_savings
 
-        if years <= 0:
-            st.error("Duration must be at least 1 year.")
-            st.session_state["planner_results"] = None
-            st.session_state.show_what_if = False
-            st.stop()
+        # --- Calculate WITH inflation (if enabled) ---
+        real_annual_return_with_inflation = annual_return - inflation_rate if inflation_enabled else annual_return
+        base_monthly_saving_with_inflation = calculate_savings_goal(target_amount, years, real_annual_return_with_inflation).get('monthly_saving', 0.0)
+        growth_df_with_inflation = _simulate_goal_growth(current_savings, base_monthly_saving_with_inflation, years, real_annual_return_with_inflation)
+        final_balance_with_inflation = growth_df_with_inflation['Ending Balance'].iloc[-1] if not growth_df_with_inflation.empty else current_savings
 
-        try:
-            with st.spinner("Calculating your financial journey..."):
-                # Calculate monthly saving for the base plan
-                # This monthly_saving is typically the amount needed *if starting from zero*.
-                # The _simulate_goal_growth function will then correctly start from current_savings.
-                base_monthly_saving_calc = calculate_savings_goal(target_amount, years, annual_return)
-                base_monthly_saving = base_monthly_saving_calc.get('monthly_saving', 0.0)
-                
-                # If calculated monthly saving is very small or negative (due to high current savings / low target)
-                # Cap it at 0, as we can't 'save negative'
-                base_monthly_saving = max(0.0, base_monthly_saving)
+        # Save results for display
+        st.session_state["planner_results"] = {
+            'goal_name': goal_name,
+            'current_savings': current_savings,
+            'target_amount': target_amount,
+            'years': years,
+            'annual_return': annual_return,
+            'inflation_enabled': inflation_enabled,
+            'inflation_rate': inflation_rate,
+            'real_annual_return_no_inflation': real_annual_return_no_inflation,
+            'real_annual_return_with_inflation': real_annual_return_with_inflation,
+            'base_monthly_saving_no_inflation': base_monthly_saving_no_inflation,
+            'base_monthly_saving_with_inflation': base_monthly_saving_with_inflation,
+            'final_balance_no_inflation': final_balance_no_inflation,
+            'final_balance_with_inflation': final_balance_with_inflation,
+            'growth_df_no_inflation': growth_df_no_inflation,
+            'growth_df_with_inflation': growth_df_with_inflation
+        }
 
-                # Simulate growth for the base plan
-                growth_df_base = _simulate_goal_growth(current_savings, base_monthly_saving, years, annual_return)
-                
-                # Check if goal is achievable with base monthly saving
-                final_balance_base = growth_df_base['Ending Balance'].iloc[-1] if not growth_df_base.empty else current_savings
-                
-                # Check for goal achievement allowing for tiny float discrepancies
-                if final_balance_base < target_amount * 0.99999: # Must be very close to target
-                    st.warning(f"⚠️ **{goal_name}** might be challenging! With ₹{base_monthly_saving:,.2f} monthly, you'll reach approximately **₹{final_balance_base:,.2f}** in {years} years. Consider increasing monthly savings, extending duration, or adjusting your target.")
-                    base_is_achievable = False
-                else:
-                    st.success(f"✅ Your plan for **{goal_name}** looks achievable! With **₹{base_monthly_saving:,.2f}** saved monthly, you'll reach **₹{final_balance_base:,.2f}** or more.")
-                    base_is_achievable = True
-
-                # Store results in session state
-                st.session_state["planner_results"] = {
-                    'goal_name': goal_name,
-                    'current_savings': current_savings,
-                    'target_amount': target_amount,
-                    'years': years,
-                    'annual_return': annual_return,
-                    'base_monthly_saving': base_monthly_saving,
-                    'growth_df_base': growth_df_base,
-                    'final_balance_base': final_balance_base,
-                    'base_is_achievable': base_is_achievable
-                }
-                # No need to rerun here, the code below will now pick up the updated state
-                # st.experimental_rerun() # Removed this, as the flow will now continue and display.
-
-        except Exception as e:
-            st.error(f"⚠️ An error occurred during calculation: {e}. Please check your inputs. Ensure your `logic.py`'s `calculate_savings_goal` function is robust.")
-            st.session_state["planner_results"] = None # Clear results if error occurs
-            st.session_state.show_what_if = False # Reset what-if
-
-    # Display results if available in session state
+    # --- Display Results ---
     if st.session_state["planner_results"] is not None:
         results = st.session_state["planner_results"]
-        goal_name = results['goal_name']
-        target_amount = results['target_amount']
-        years = results['years']
-        annual_return = results['annual_return']
-        current_savings = results['current_savings']
-        base_monthly_saving = results['base_monthly_saving']
-        growth_df_base = results['growth_df_base']
-        final_balance_base = results['final_balance_base']
-        base_is_achievable = results['base_is_achievable']
-        
-        # Display base plan summary
-        st.subheader(f"📊 Your Plan for: {goal_name}")
-        col_summary_1, col_summary_2, col_summary_3 = st.columns(3)
-        with col_summary_1:
-            st.metric("Required Monthly Saving", f"₹{base_monthly_saving:,.2f}")
-        with col_summary_2:
-            st.metric("Projected Final Balance", f"₹{final_balance_base:,.2f}")
-        with col_summary_3:
-            # Calculate total contributions (initial + monthly * months)
-            total_contributed_base = current_savings + (base_monthly_saving * years * 12)
-            total_interest_base = final_balance_base - total_contributed_base
-            st.metric("Total Interest Earned", f"₹{max(0, total_interest_base):,.2f}") # Ensure not negative
+        st.markdown("### 📊 Investment Analysis")
 
-
-        # Initial Plot for Base Scenario
-        fig = px.line(
-            growth_df_base, 
-            x='Year', 
-            y='Ending Balance', 
-            title=f'Projected Savings Growth for {goal_name}',
-            labels={'Ending Balance': 'Balance (₹)'},
-            line_shape="spline"
-        )
-        fig.add_hline(y=target_amount, line_dash="dot", line_color="red", 
-                      annotation_text=f"Target: ₹{target_amount:,.0f}", 
-                      annotation_position="bottom right",
-                      annotation_font_color="red")
-        fig.update_traces(name='Base Plan', line=dict(color='#00d4aa', width=3), mode='lines+markers', marker=dict(size=6))
-        
-        fig.update_layout(
-            hovermode="x unified",
-            xaxis_title="Year",
-            yaxis_title="Balance (₹)",
-            template="plotly_dark",
-            font=dict(color='white'),
-            height=450,
-            showlegend=True
-        )
-
-        growth_dfs_to_display = {'Base Plan': growth_df_base}
-        
-        # --- What-If Scenario ---
-        if st.session_state.show_what_if:
-            st.subheader("🔮 'What-If' Scenario: Adjusting Your Monthly Contribution")
-            
-            # Ensure minimum value for slider is not less than negative base_monthly_saving
-            # to prevent 'what_if_monthly_saving' from going significantly negative if monthly_saving is already 0.
-            min_slider_value = -base_monthly_saving if base_monthly_saving > 0 else 0.0 # Can't reduce below 0 saving
-            monthly_saving_adjustment = st.slider(
-                "Adjust Monthly Saving (₹)",
-                min_value=float(min_slider_value), 
-                max_value=100000.0,  # Allows increasing significantly
-                value=0.0,
-                step=100.0,
-                format="₹%.2f",
-                key="what_if_monthly_adjustment",
-                help="Adjust your monthly saving to see its impact. A negative value means saving less than the base plan."
-            )
-
-            what_if_monthly_saving = max(0.0, base_monthly_saving + monthly_saving_adjustment) # Ensure non-negative
-            
-            # Simulate growth for the What-If plan
-            growth_df_what_if = _simulate_goal_growth(current_savings, what_if_monthly_saving, years, annual_return)
-            final_balance_what_if = growth_df_what_if['Ending Balance'].iloc[-1] if not growth_df_what_if.empty else current_savings
-
-
-            # Add What-If scenario to the plot
-            fig.add_trace(go.Scatter(
-                x=growth_df_what_if['Year'],
-                y=growth_df_what_if['Ending Balance'],
-                mode='lines+markers',
-                name='What-If Plan',
-                line=dict(color='#a855f7', width=3), # Purple color for comparison
-                marker=dict(size=6)
-            ))
-            fig.update_layout(title=f'Projected Savings Growth for {goal_name} (Base vs. What-If)')
-            growth_dfs_to_display['What-If Plan'] = growth_df_what_if
-
-            st.write(f"With an adjusted monthly saving of **₹{what_if_monthly_saving:,.2f}**:")
-            
-            col_what_if_sum_1, col_what_if_sum_2 = st.columns(2)
-            with col_what_if_sum_1:
-                delta_balance = final_balance_what_if - final_balance_base
-                st.metric("New Projected Final Balance", f"₹{final_balance_what_if:,.2f}", delta=delta_balance)
-                
-                # Manual formatting for the delta text to avoid ValueError
-                if np.isfinite(delta_balance) and delta_balance != 0:
-                    delta_balance_str = f"{abs(delta_balance):,.2f}" # Format absolute value
-                    sign = "+" if delta_balance > 0 else "-"
-                    st.markdown(f"<small style='text-align: right; margin-top: -10px;'>({sign}₹{delta_balance_str} vs Base)</small>", unsafe_allow_html=True)
-                elif not np.isfinite(delta_balance):
-                    st.markdown(f"<small style='text-align: right; margin-top: -10px;'>(Difference vs Base: Not a finite number)</small>", unsafe_allow_html=True)
-
-
-            with col_what_if_sum_2:
-                what_if_total_contributed = current_savings + (what_if_monthly_saving * years * 12)
-                what_if_total_interest = final_balance_what_if - what_if_total_contributed
-                delta_interest = max(0, what_if_total_interest) - max(0, total_interest_base)
-                st.metric("New Total Interest Earned", f"₹{max(0, what_if_total_interest):,.2f}", delta=delta_interest)
-
-                # Manual formatting for the delta text to avoid ValueError
-                if np.isfinite(delta_interest) and delta_interest != 0:
-                    delta_interest_str = f"{abs(delta_interest):,.2f}" # Format absolute value
-                    sign = "+" if delta_interest > 0 else "-"
-                    st.markdown(f"<small style='text-align: right; margin-top: -10px;'>({sign}₹{delta_interest_str} vs Base)</small>", unsafe_allow_html=True)
-                elif not np.isfinite(delta_interest):
-                    st.markdown(f"<small style='text-align: right; margin-top: -10px;'>(Difference vs Base: Not a finite number)</small>", unsafe_allow_html=True)
-
-
-            # Dynamic message based on What-If
-            if final_balance_what_if >= target_amount * 0.99999 and final_balance_base < target_amount * 0.99999:
-                st.info(f"✨ **Fantastic!** By saving **₹{abs(monthly_saving_adjustment):,.2f}** {'more' if monthly_saving_adjustment > 0 else 'less'} per month, your 'What-If' plan now **meets** your target of ₹{target_amount:,.2f}!")
-            elif final_balance_what_if < target_amount * 0.99999 and final_balance_base >= target_amount * 0.99999:
-                 st.warning(f"😔 Oh no! By saving **₹{abs(monthly_saving_adjustment):,.2f}** {'less' if monthly_saving_adjustment < 0 else 'more'} per month, your 'What-If' plan now **falls short** of your target of ₹{target_amount:,.2f}. Careful with those adjustments!")
-            elif monthly_saving_adjustment > 0:
-                st.info(f"🚀 Great progress! Saving an extra ₹{monthly_saving_adjustment:,.2f} monthly boosts your final balance to ₹{final_balance_what_if:,.2f}.")
-            elif monthly_saving_adjustment < 0 and what_if_monthly_saving > 0: # Only if still saving something
-                st.warning(f"📉 Be careful! Saving ₹{abs(monthly_saving_adjustment):,.2f} less monthly reduces your final balance to ₹{final_balance_what_if:,.2f}.")
-            elif what_if_monthly_saving == 0 and monthly_saving_adjustment < 0:
-                st.warning(f"🛑 You've stopped monthly contributions in the 'What-If' scenario. Your goal might be delayed or not reached.")
-
-
-        st.plotly_chart(fig, use_container_width=True)
-
-        st.markdown("### 📅 Detailed Yearly Breakdown")
-        
-        # Prepare data for detailed table, combining scenarios if applicable
-        combined_df_data = []
-        for year_num in range(1, years + 1):
-            row_base = growth_df_base[growth_df_base['Year'] == year_num].iloc[0]
-            
-            base_ending = row_base['Ending Balance']
-            base_cont = row_base['Annual Contributions']
-            base_interest = row_base['Interest Earned']
-
-            row_data = {
-                'Year': year_num,
-                'Base Plan - Contributions': f"₹{base_cont:,.2f}",
-                'Base Plan - Interest': f"₹{base_interest:,.2f}",
-                'Base Plan - Ending Balance': f"₹{base_ending:,.2f}"
-            }
-            
-            if st.session_state.show_what_if:
-                # Ensure what_if_monthly_saving is available for this scope
-                # It should be, as it's calculated right before this block if show_what_if is True
-                row_what_if = growth_df_what_if[growth_df_what_if['Year'] == year_num].iloc[0]
-                what_if_ending = row_what_if['Ending Balance']
-                what_if_cont = row_what_if['Annual Contributions']
-                what_if_interest = row_what_if['Interest Earned']
-
-                row_data.update({
-                    'What-If Plan - Contributions': f"₹{what_if_cont:,.2f}",
-                    'What-If Plan - Interest': f"₹{what_if_interest:,.2f}",
-                    'What-If Plan - Ending Balance': f"₹{what_if_ending:,.2f}"
-                })
-            
-            combined_df_data.append(row_data)
-
-        st.dataframe(pd.DataFrame(combined_df_data), use_container_width=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("#### Without Inflation")
+            st.write(f"**Monthly Saving Needed:** ₹{results['base_monthly_saving_no_inflation']:.2f}")
+            st.write(f"**Final Balance:** ₹{results['final_balance_no_inflation']:.2f}")
+            st.write(f"**Annual Return Used:** {results['real_annual_return_no_inflation']}%")
+            st.dataframe(results['growth_df_no_inflation'])
+        with col2:
+            st.markdown("#### With Inflation")
+            st.write(f"**Monthly Saving Needed:** ₹{results['base_monthly_saving_with_inflation']:.2f}")
+            st.write(f"**Final Balance:** ₹{results['final_balance_with_inflation']:.2f}")
+            st.write(f"**Annual Return Used:** {results['real_annual_return_with_inflation']}%")
+            st.write(f"**Inflation Rate:** {results['inflation_rate']}%")
+            st.dataframe(results['growth_df_with_inflation'])
 
     # Add a reset button for the plan
     # This button appears if a plan has been calculated OR if any inputs are not default OR what-if is active
