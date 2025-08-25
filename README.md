@@ -23,10 +23,12 @@ Experience the app in action with our live deployment:
 | 📉 **RSI & Strategy Engine** | Detects overbought/oversold conditions and provides investment suggestions |
 | 📰 **Stock News Summarizer** | Fetches and summarizes live news via NewsAPI and GNews for selected stocks |
 | 💬 **Gemini Finance Chatbot** | Ask financial questions like: `"Is now a good time to invest in AAPL?"` |
-| 📦 **Portfolio Tracking** | View real-time valuation of your stock portfolio |
-| 🎯 **Savings Goal Planner** | Calculate monthly savings needed to reach your financial goals |
+| 💼 **Portfolio Tracker** | Add, track, and analyze your stock holdings with real-time prices, gain/loss, allocation charts, and CSV export |
+| 🎯 **Savings Goal Planner** | Calculate monthly savings needed to reach your financial goals, and get detailed yearly breakdowns  |
 | 📥 **Export Tools** | Export CSV reports and view candlestick trend charts |
 | 🔐 **Secure Key Management** | Safely manage API keys via `.env` (excluded from Git) |
+| 💸 **SIP & Lumpsum Calculator** | Visualize and compare SIP vs. Lumpsum investment outcomes with interactive charts |
+| 🔐 **User Authentication** | Secure login/signup with captcha and persistent user management |
 
 ---
 
