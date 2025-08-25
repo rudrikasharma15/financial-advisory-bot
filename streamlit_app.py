@@ -9,6 +9,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 
+# Page config must be the first Streamlit call
+st.set_page_config(
+    page_title="📊 Artha.ai",
+    page_icon="💼",
+    layout="wide"
+)
+
 # ------------------------------------------------------------
 # Path safety: make sure local folder is importable
 # ------------------------------------------------------------
@@ -60,7 +67,7 @@ try:
     # Flag to indicate if real logic is loaded
     _LOGIC_LOADED = True
 except ImportError:
-    st.error("Error: `logic.py` not found or functions missing. Providing dummy functions. Please ensure `logic.py` is in the same directory and contains all required functions for full functionality.")
+    # st.error("Error: `logic.py` not found or functions missing. Providing dummy functions. Please ensure `logic.py` is in the same directory and contains all required functions for full functionality.")
     _LOGIC_LOADED = False
     
     # Dummy implementations for development/testing when logic.py is absent
@@ -174,11 +181,6 @@ def process_stock_data(stock_data: pd.DataFrame, symbols: List[str]) -> Tuple[An
     results, evaluation = predict_stocks(model, scaler_X, scaler_y, combined_scaled, X_test, target_cols, y_test, train_size)
     
     return stock_data_processed, results
-
-# Config and Branding
-st.set_page_config(page_title="📊 Artha.ai", page_icon="💼", layout="wide")
-st.markdown('<style>.css-1d391kg{padding-top:0rem;}</style>', unsafe_allow_html=True)
-st.markdown('<h1 style="text-align :center; color:#2E86C1;">🤖 Artha AI</h1>', unsafe_allow_html=True)
 
 # State
 if "dashboard_run" not in st.session_state:
@@ -596,34 +598,86 @@ if tab_options == "🎯 Goal Planner":
             st.write(f"**Monthly Saving Needed:** ₹{results['base_monthly_saving_no_inflation']:.2f}")
             st.write(f"**Final Balance:** ₹{results['final_balance_no_inflation']:.2f}")
             st.write(f"**Annual Return Used:** {results['real_annual_return_no_inflation']}%")
-            st.dataframe(results['growth_df_no_inflation'])
+
+            df1 = results['growth_df_no_inflation'].copy().round(2)
+            st.table(df1)
+
         with col2:
             st.markdown("#### With Inflation")
             st.write(f"**Monthly Saving Needed:** ₹{results['base_monthly_saving_with_inflation']:.2f}")
             st.write(f"**Final Balance:** ₹{results['final_balance_with_inflation']:.2f}")
             st.write(f"**Annual Return Used:** {results['real_annual_return_with_inflation']}%")
             st.write(f"**Inflation Rate:** {results['inflation_rate']}%")
-            st.dataframe(results['growth_df_with_inflation'])
 
-    # Add a reset button for the plan
-    # This button appears if a plan has been calculated OR if any inputs are not default OR what-if is active
-    if st.session_state["planner_results"] is not None or (
-        st.session_state.get('planner_goal_name') != "My Dream Goal" or
-        st.session_state.get('planner_current_savings') != 0.0 or
-        st.session_state.get('planner_target_amount') != 1000000.0 or
-        st.session_state.get('planner_years') != 10 or
-        st.session_state.get('planner_annual_return') != 7 or
-        st.session_state.show_what_if is True
-    ): 
-        if st.button("🔄 Reset Goal Planner", key="reset_goal_plan_button"):
-            st.session_state["planner_results"] = None
-            st.session_state['planner_goal_name'] = ""
-            st.session_state['planner_current_savings'] = None
-            st.session_state['planner_target_amount'] = None
-            st.session_state['planner_years'] = None
-            st.session_state['planner_annual_return'] = None
-            st.session_state.show_what_if = False # Reset what-if toggle
-            st.rerun()
+            df2 = results['growth_df_with_inflation'].copy().round(2)
+            st.table(df2)
+
+        # --- PDF Export ---
+        from reportlab.lib.pagesizes import letter
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet
+        import io
+
+        # Add these two imports
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+
+        import io
+
+        # Register the font (make sure DejaVuSans.ttf is in the same folder or give full path)
+        pdfmetrics.registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
+
+        # Define styles using your registered font
+        styles = getSampleStyleSheet()
+        styles['Normal'].fontName = 'DejaVuSans'
+        styles['Heading1'].fontName = 'DejaVuSans'
+        styles['Heading2'].fontName = 'DejaVuSans'
+        styles['Heading3'].fontName = 'DejaVuSans'
+
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        # styles = getSampleStyleSheet()
+        elements = []
+
+        elements.append(Paragraph("Investment Analysis", styles['Heading1']))
+
+        # Without Inflation
+        elements.append(Paragraph("Without Inflation", styles['Heading2']))
+        elements.append(Paragraph(f"Monthly Saving Needed: ₹{results['base_monthly_saving_no_inflation']:.2f}", styles['Normal']))
+        elements.append(Paragraph(f"Final Balance: ₹{results['final_balance_no_inflation']:.2f}", styles['Normal']))
+        elements.append(Paragraph(f"Annual Return Used: {results['real_annual_return_no_inflation']}%", styles['Normal']))
+        elements.append(Spacer(1, 12))
+        table1 = Table([df1.columns.tolist()] + df1.values.tolist())
+        table1.setStyle(TableStyle([("GRID", (0,0), (-1,-1), 0.5, colors.grey)]))
+        elements.append(table1)
+
+        elements.append(Spacer(1, 24))
+
+        # With Inflation
+        elements.append(Paragraph("With Inflation", styles['Heading2']))
+        elements.append(Paragraph(f"Monthly Saving Needed: ₹{results['base_monthly_saving_with_inflation']:.2f}", styles['Normal']))
+        elements.append(Paragraph(f"Final Balance: ₹{results['final_balance_with_inflation']:.2f}", styles['Normal']))
+        elements.append(Paragraph(f"Annual Return Used: {results['real_annual_return_with_inflation']}%", styles['Normal']))
+        elements.append(Paragraph(f"Inflation Rate: {results['inflation_rate']}%", styles['Normal']))
+        elements.append(Spacer(1, 12))
+        table2 = Table([df2.columns.tolist()] + df2.values.tolist())
+        table2.setStyle(TableStyle([("GRID", (0,0), (-1,-1), 0.5, colors.grey)]))
+        elements.append(table2)
+
+        doc.build(elements)
+        pdf_data = buffer.getvalue()
+        buffer.close()
+
+        st.download_button(
+            label="📥 Download Investment Analysis (PDF)",
+            data=pdf_data,
+            file_name="investment_analysis.pdf",
+            mime="application/pdf"
+        )
+
+
 # Portfolio Tracking Tab
 
 if tab_options == "💼 Portfolio Tracker":
@@ -888,4 +942,30 @@ st.markdown("""
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+
+import streamlit as st
+hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
