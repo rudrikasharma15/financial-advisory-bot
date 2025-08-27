@@ -1,40 +1,38 @@
-## Which issue does this PR close?
+# 📌 Pull Request (PR) Template
 
-<!--
-We generally require a GitHub issue to be filed for all bug fixes and enhancements and this helps us generate change logs for our releases. You can link an issue to this PR using the GitHub syntax. For example `Closes #123` indicates that this PR will close issue #123.
--->
+## 🔗 Related Issue
+Which issue does this PR fix?  
+Example: Fixes #12  
 
-- Closes #.
+## ✨ What Did You Change?
+Write a short summary of the changes you made.  
+Example: "Fixed the bug" or "Added a new feature."
 
-## Rationale for this change
+## 🔄 Type of Change
+Tick the box that matches your change:
 
-<!--
- Why are you proposing this change? If this is already explained clearly in the issue then this section is not needed.
- Explaining clearly why changes are proposed helps reviewers understand your changes and offer better suggestions for fixes.  
--->
+- [ ] 🐛 Bug fix (fixing an error or problem)
+- [ ] ✨ New feature (adding something new)
+- [ ] 📝 Documentation (README, docs, etc.)
+- [ ] 🧹 Code style/formatting (cleaning or organizing code)
+- [ ] ✅ Tests (adding or updating tests)
 
-## What changes are included in this PR?
+## 📸 Screenshots (if needed)
+If your change affects the design or UI, please add a screenshot here.
 
-<!--
-There is no need to duplicate the description in the issue here but it is sometimes worth providing a summary of the individual changes in this PR.
--->
+## 🧪 How Did You Test This?
+Tell us how you checked your change works.  
+Example: "I ran it on my local machine with test data" or "I tested on Chrome and Firefox."
 
-## Are these changes tested?
+## ✅ Checklist
+- [ ] My code follows the project rules
+- [ ] I checked my code and fixed mistakes
+- [ ] I added comments where the code was hard to understand
+- [ ] I updated docs/README if needed
+- [ ] My change works without new errors/warnings
+- [ ] I added tests (if it makes sense)
+- [ ] All tests passed on my computer
 
-<!--
-We typically require tests for all PRs in order to:
-1. Prevent the code from being accidentally broken by subsequent changes
-2. Serve as another way to document the expected behavior of the code
+---
 
-If tests are not included in your PR, please explain why (for example, are they covered by existing tests)?
--->
-
-## Are there any user-facing changes?
-
-<!--
-If there are user-facing changes then we may require documentation to be updated before approving the PR.
--->
-
-<!--
-If there are any breaking changes to public APIs, please add the `api change` label.
--->
+💡 *Thanks for contributing! Your help makes this project better.*
