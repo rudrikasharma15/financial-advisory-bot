@@ -1,6 +1,6 @@
 <!-- 📌 Pull Request (PR) Template -->
 
-## ✅ Related Issue
+## ✅ Issue Fix
 Which issue does this PR fix?  
 Example: Fixes #12  
 
