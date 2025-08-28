@@ -189,7 +189,33 @@ if "planner_results" not in st.session_state:
     st.session_state["planner_results"] = None # To store the calculated plan for persistence
 
 # Sidebar Navigation
-tab_options = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📊 Stock Dashboard", "💬 Finance Bot", "🎯 Goal Planner","💼 Portfolio Tracker","💸 SIP and Lumpsum Calculator"])
+# Sidebar Navigation
+tab_options = st.sidebar.radio(
+    "🔎 Navigate",
+    [
+        "🏠 Home",
+        "📊 Stock Dashboard",
+        "💬 Finance Bot",
+        "🎯 Goal Planner",
+        "💼 Portfolio Tracker",
+        "💸 SIP and Lumpsum Calculator"
+    ]
+)
+
+# Highlight Active Page
+if tab_options == "🏠 Home":
+    st.sidebar.success("✅ You are on Home Page")
+elif tab_options == "📊 Stock Dashboard":
+    st.sidebar.success("📊 Viewing Stock Dashboard")
+elif tab_options == "💬 Finance Bot":
+    st.sidebar.success("🤖 Chatting with Finance Bot")
+elif tab_options == "🎯 Goal Planner":
+    st.sidebar.success("🎯 Planning Your Goals")
+elif tab_options == "💼 Portfolio Tracker":
+    st.sidebar.success("📂 Tracking Your Portfolio")
+elif tab_options == "💸 SIP and Lumpsum Calculator":
+    st.sidebar.success("💸 Calculating SIP & Lumpsum")
+
 
 
 # Home Tab
