@@ -5,6 +5,30 @@ import os
 import random
 
 USER_FILE = "users.json"
+USER_DATA_FILE = "user_data.json"
+
+# Load all user-specific data from file
+def load_all_user_data():
+    if os.path.exists(USER_DATA_FILE):
+        with open(USER_DATA_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+# Save all user-specific data to file
+def save_all_user_data(data):
+    with open(USER_DATA_FILE, "w") as f:
+        json.dump(data, f)
+
+# Load data for a specific user
+def load_user_data(username):
+    all_data = load_all_user_data()
+    return all_data.get(username, {})
+
+# Save data for a specific user
+def save_user_data(username, user_data):
+    all_data = load_all_user_data()
+    all_data[username] = user_data
+    save_all_user_data(all_data)
 
 # Load users from file
 def load_users():
@@ -40,6 +64,9 @@ def auth_component():
     if st.session_state.logged_in:
         st.success(f"✅ Logged in as {st.session_state.current_user}")
         if st.button("Logout"):
+            for key in list(st.session_state.keys()):
+                if key not in ["users"]: # Keep users list
+                    del st.session_state[key]
             st.session_state.logged_in = False
             st.session_state.current_user = None
             st.rerun()

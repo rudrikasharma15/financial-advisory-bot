@@ -22,7 +22,7 @@ if _base_dir not in sys.path:
     sys.path.append(_base_dir)
 
 # Import your login system
-from auth import auth_component
+from auth import auth_component, load_user_data, save_user_data
 
 
 # ------------------------------------------------------------
@@ -33,6 +33,15 @@ auth_status = auth_component()
 if not auth_status:
     st.warning("Please login to access the app 🚪")
     st.stop()
+
+# ------------------------------------------------------------
+# 2. Load user data after login
+# ------------------------------------------------------------
+if "user_data_loaded" not in st.session_state:
+    user_data = load_user_data(st.session_state.current_user)
+    st.session_state.portfolio = user_data.get("portfolio", [])
+    st.session_state.planner_results = user_data.get("planner_results", None)
+    st.session_state.user_data_loaded = True
 
             
 import streamlit as st
@@ -581,14 +590,24 @@ if tab_options == "🎯 Goal Planner":
             'base_monthly_saving_with_inflation': base_monthly_saving_with_inflation,
             'final_balance_no_inflation': final_balance_no_inflation,
             'final_balance_with_inflation': final_balance_with_inflation,
-            'growth_df_no_inflation': growth_df_no_inflation,
-            'growth_df_with_inflation': growth_df_with_inflation
+            'growth_df_no_inflation': growth_df_no_inflation.to_dict(),
+            'growth_df_with_inflation': growth_df_with_inflation.to_dict()
         }
+        save_user_data(st.session_state.current_user, {
+            "portfolio": st.session_state.portfolio,
+            "planner_results": st.session_state.planner_results
+        })
 
     # --- Display Results ---
     if st.session_state["planner_results"] is not None:
         results = st.session_state["planner_results"]
         st.markdown("### 📊 Investment Analysis")
+
+        # Convert dict back to DataFrame if necessary
+        if isinstance(results['growth_df_no_inflation'], dict):
+            results['growth_df_no_inflation'] = pd.DataFrame.from_dict(results['growth_df_no_inflation'])
+        if isinstance(results['growth_df_with_inflation'], dict):
+            results['growth_df_with_inflation'] = pd.DataFrame.from_dict(results['growth_df_with_inflation'])
 
         col1, col2 = st.columns(2)
         with col1:
@@ -623,6 +642,10 @@ if tab_options == "🎯 Goal Planner":
             st.session_state['planner_years'] = None
             st.session_state['planner_annual_return'] = None
             st.session_state.show_what_if = False # Reset what-if toggle
+            save_user_data(st.session_state.current_user, {
+                "portfolio": st.session_state.portfolio,
+                "planner_results": st.session_state.planner_results
+            })
             st.rerun()
 # Portfolio Tracking Tab
 
@@ -647,6 +670,10 @@ if tab_options == "💼 Portfolio Tracker":
                 "units": units,
                 "buy_price": buy_price,
                 "buy_date": str(buy_date)
+            })
+            save_user_data(st.session_state.current_user, {
+                "portfolio": st.session_state.portfolio,
+                "planner_results": st.session_state.planner_results
             })
             st.success(f"{symbol.strip().upper()} added to portfolio!")
 
@@ -731,6 +758,10 @@ if tab_options == "💼 Portfolio Tracker":
 
         if st.button("🗑️ Clear Portfolio"):
             st.session_state.portfolio = []
+            save_user_data(st.session_state.current_user, {
+                "portfolio": st.session_state.portfolio,
+                "planner_results": st.session_state.planner_results
+            })
             st.rerun()
 
     else:
