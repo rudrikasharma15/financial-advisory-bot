@@ -9,6 +9,261 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 
+# Page config must be the first Streamlit call
+st.set_page_config(
+    page_title="📊 Artha.ai",
+    page_icon="💼",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Custom CSS for enhanced styling
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Global Styles */
+    .main {
+        padding-top: 2rem;
+    }
+    
+    /* Custom font */
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Header styling */
+    .main-header {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        color: white;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .main-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .main-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+    
+    /* Sidebar styling */
+    .css-1d391kg {
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .sidebar .sidebar-content {
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    /* Cards styling */
+    .metric-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        margin-bottom: 1rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-label {
+        font-size: 0.9rem;
+        color: #718096;
+        text-transform: uppercase;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+    
+    .metric-change {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+    
+    .positive { color: #38a169; }
+    .negative { color: #e53e3e; }
+    .neutral { color: #718096; }
+    
+    /* Feature cards */
+    .feature-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: scale(1.02);
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .feature-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 0.8rem;
+    }
+    
+    .feature-desc {
+        opacity: 0.9;
+        line-height: 1.5;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Input styling */
+    .stTextInput > div > div > input {
+        border-radius: 8px;
+        border: 2px solid #e2e8f0;
+        transition: border-color 0.2s ease;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    /* Success/Warning/Error styling */
+    .stSuccess, .stWarning, .stError {
+        border-radius: 8px;
+        border: none;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .stSuccess {
+        background: linear-gradient(90deg, #48bb78, #38a169);
+        color: white;
+    }
+    
+    .stWarning {
+        background: linear-gradient(90deg, #ed8936, #dd6b20);
+        color: white;
+    }
+    
+    .stError {
+        background: linear-gradient(90deg, #f56565, #e53e3e);
+        color: white;
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        background-color: #f7fafc;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: #667eea;
+    }
+    
+    /* Footer styling */
+    .footer {
+        background: linear-gradient(90deg, #2d3748 0%, #4a5568 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        margin-top: 3rem;
+    }
+    
+    /* Loading spinner */
+    .stSpinner > div {
+        border-top-color: #667eea !important;
+    }
+    
+    /* Radio button styling */
+    .stRadio > div {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Slider styling */
+    .stSlider > div > div > div > div {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    /* Expander styling */
+    .streamlit-expanderHeader {
+        background: #f7fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+    
+    /* Navigation active state */
+    .nav-active {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 0.5rem;
+        margin: 0.2rem 0;
+    }
+    
+    /* Data table styling */
+    .dataframe {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Hide Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stDeployButton {display:none;}
+</style>
+""", unsafe_allow_html=True)
+
 # ------------------------------------------------------------
 # Path safety: make sure local folder is importable
 # ------------------------------------------------------------
@@ -22,34 +277,22 @@ if _base_dir not in sys.path:
     sys.path.append(_base_dir)
 
 # Import your login system
-from auth import auth_component
-
-
-# ------------------------------------------------------------
-# 1. Login / Signup first
-# ------------------------------------------------------------
-auth_status = auth_component()
-
-if not auth_status:
-    st.warning("Please login to access the app 🚪")
-    st.stop()
-
-            
-import streamlit as st
-import pandas as pd
-import time
-from PIL import Image
-from typing import Dict, Any, Optional, Tuple, List
-import plotly.express as px  # Added for new plots
-import plotly.graph_objects as go  # Added for new plots
-import numpy as np # Import numpy for isfinite check
+try:
+    from auth import auth_component
+    # 1. Login / Signup first
+    auth_status = auth_component()
+    if not auth_status:
+        st.markdown("""
+        <div class="main-header">
+            <h1>🚪 Welcome to Artha.ai</h1>
+            <p>Please login to access your financial dashboard</p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.stop()
+except ImportError:
+    st.warning("Auth module not found. Proceeding without authentication.")
 
 # --- IMPT: Error Handling for logic.py ---
-# Ensure your logic.py file is in the same directory as this app.py
-# and contains ALL the functions listed below.
-# If logic.py is missing or functions are not defined there,
-# this try-except block will provide dummy functions to allow the app to run,
-# but the core financial/stock logic will not work as intended.
 try:
     from logic import (
         fetch_stock_data, compute_rsi, get_general_financial_advice,
@@ -57,39 +300,29 @@ try:
         get_mock_macro_features, prepare_model, predict_stocks, fetch_stock_news,
         get_advice, calculate_risk, get_strategy
     )
-    # Flag to indicate if real logic is loaded
     _LOGIC_LOADED = True
 except ImportError:
-    st.error("Error: `logic.py` not found or functions missing. Providing dummy functions. Please ensure `logic.py` is in the same directory and contains all required functions for full functionality.")
     _LOGIC_LOADED = False
     
     # Dummy implementations for development/testing when logic.py is absent
     def fetch_stock_data(*args, **kwargs): 
-        # st.warning("Dummy fetch_stock_data called."); 
         return pd.DataFrame()
     def compute_rsi(*args, **kwargs): 
-        # st.warning("Dummy compute_rsi called."); 
-        return pd.Series([50.0, 55.0]) # Return a series for charting
+        return pd.Series([50.0, 55.0])
     def get_general_financial_advice(*args, **kwargs): 
-        # st.warning("Dummy get_general_financial_advice called."); 
         return "This is dummy financial advice because `logic.py` could not be loaded."
     def calculate_savings_goal(target_amount, years, annual_return):
-        # st.warning("Dummy calculate_savings_goal called.");
-        # Simplified dummy calculation for monthly saving needed to reach target_amount from ZERO
-        if years <= 0: # Avoid division by zero
+        if years <= 0:
             return {'monthly_saving': target_amount / 12 if target_amount > 0 else 0.0} 
         
         monthly_rate = (annual_return / 100) / 12
         num_months = years * 12
         
         if num_months == 0: 
-            monthly_saving = target_amount # If duration is zero, need to save all immediately
-        elif monthly_rate == 0: # No interest earned
+            monthly_saving = target_amount
+        elif monthly_rate == 0:
             monthly_saving = target_amount / num_months
         else:
-            # Future Value of an Ordinary Annuity (PMT formula)
-            # PMT = FV * r / ((1 + r)^n - 1)
-            # This is a basic approximation for dummy purposes.
             factor = ((1 + monthly_rate)**num_months - 1) / monthly_rate
             monthly_saving = target_amount / factor if factor != 0 else target_amount / num_months
         
@@ -100,44 +333,34 @@ except ImportError:
             'monthly_saving': monthly_saving
         }
     def get_stock_data(*args, **kwargs): 
-        # st.warning("Dummy get_stock_data called."); 
-        return pd.DataFrame({'Date': pd.to_datetime(['2023-01-01', '2023-01-02']), 'AAPL': [150, 152], 'MSFT': [250, 255]}).set_index('Date')
+        return pd.DataFrame({'Date': pd.to_datetime(['2023-01-01', '2023-01-02']), 
+                           'AAPL': [150, 152], 'MSFT': [250, 255]}).set_index('Date')
     def add_technical_indicators(df, symbols): 
-        # st.warning("Dummy add_technical_indicators called."); 
-        return df # Return original df
+        return df
     def get_mock_macro_features(*args, **kwargs): 
-        # st.warning("Dummy get_mock_macro_features called."); 
         return pd.DataFrame()
     def prepare_model(*args, **kwargs): 
-        # st.warning("Dummy prepare_model called."); 
-        return None # Returns None to indicate no model
+        return None
     def predict_stocks(model, scaler_X, scaler_y, combined_scaled, X_test, target_cols, y_test, train_size):
-        # st.warning("Dummy predict_stocks called.");
-        # Provide some dummy prediction results to allow the dashboard to render
         dummy_predicted = [155.0, 156.0]
         dummy_actual = [153.0, 154.0]
-        return {'AAPL': {'predicted': dummy_predicted, 'actual': dummy_actual}, 'MSFT': {'predicted': [258.0, 260.0], 'actual': [256.0, 257.0]}}, {} # Return dummy results
+        return {'AAPL': {'predicted': dummy_predicted, 'actual': dummy_actual}, 
+                'MSFT': {'predicted': [258.0, 260.0], 'actual': [256.0, 257.0]}}, {}
     def fetch_stock_news(*args, **kwargs): 
-        # st.warning("Dummy fetch_stock_news called."); 
         return "No news available (dummy data)."
     def get_advice(*args, **kwargs): 
-        # st.warning("Dummy get_advice called."); 
         return "Generic advice (dummy data)."
     def calculate_risk(*args, **kwargs): 
-        # st.warning("Dummy calculate_risk called."); 
         return 5.0
     def get_strategy(*args, **kwargs): 
-        # st.warning("Dummy get_strategy called."); 
         return "General strategy (dummy data)."
-
 
 # Configure caching
 @st.cache_data(ttl=300, show_spinner=False)
 def load_stock_data(symbols: List[str]) -> Optional[pd.DataFrame]:
     """Load stock data with caching and error handling."""
-    # This check ensures we use the dummy if logic.py is not loaded
     if not _LOGIC_LOADED: 
-        return get_stock_data(symbols) # Calls dummy if _LOGIC_LOADED is False
+        return get_stock_data(symbols)
     
     if not symbols:
         return None
@@ -151,65 +374,121 @@ def load_stock_data(symbols: List[str]) -> Optional[pd.DataFrame]:
 @st.cache_data(ttl=300, show_spinner=False)
 def process_stock_data(stock_data: pd.DataFrame, symbols: List[str]) -> Tuple[Any, Dict]:
     """Process stock data with caching."""
-    # This check ensures we use the dummy if logic.py is not loaded
     if not _LOGIC_LOADED: 
-        # Call dummy predict_stocks, which expects some arguments but can handle None for dummies
-        # It's crucial that dummy predict_stocks returns a dictionary with 'predicted' and 'actual' keys
         dummy_results, _ = predict_stocks(None,None,None,None,None,None,None,None) 
         return stock_data, dummy_results
     
     if stock_data is None or stock_data.empty:
         return None, {}
     
-    stock_data_copy = stock_data.copy() # Work on a copy to avoid SettingWithCopyWarning
+    stock_data_copy = stock_data.copy()
     stock_data_processed = add_technical_indicators(stock_data_copy, symbols)
     macro = get_mock_macro_features(stock_data_processed.index)
     model_result = prepare_model(symbols, stock_data_processed, macro)
     
     if not model_result:
-        # st.warning("Model preparation failed. Cannot predict stocks.")
-        return stock_data_processed, {} # Return processed data, but empty results if model fails
+        return stock_data_processed, {}
     
     model, scaler_X, scaler_y, combined_scaled, X_test, target_cols, y_test, train_size = model_result
     results, evaluation = predict_stocks(model, scaler_X, scaler_y, combined_scaled, X_test, target_cols, y_test, train_size)
     
     return stock_data_processed, results
 
-# Config and Branding
-st.set_page_config(page_title="📊 Artha.ai", page_icon="💼", layout="wide")
-st.markdown('<style>.css-1d391kg{padding-top:0rem;}</style>', unsafe_allow_html=True)
-st.markdown('<h1 style="text-align :center; color:#2E86C1;">🤖 Artha AI</h1>', unsafe_allow_html=True)
-
-# State
+# State initialization
 if "dashboard_run" not in st.session_state:
     st.session_state["dashboard_run"] = False
 if "planner_results" not in st.session_state:
-    st.session_state["planner_results"] = None # To store the calculated plan for persistence
+    st.session_state["planner_results"] = None
 
-# Sidebar Navigation
-tab_options = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📊 Stock Dashboard", "💬 Finance Bot", "🎯 Goal Planner","💼 Portfolio Tracker","💸 SIP and Lumpsum Calculator"])
+# Enhanced Sidebar Navigation
+st.sidebar.markdown("""
+<div style="text-align: center; padding: 1rem; margin-bottom: 2rem;">
+    <h2 style="color: white; margin: 0; font-weight: 700;">📊 Artha.ai</h2>
+    <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">Your Financial Assistant</p>
+</div>
+""", unsafe_allow_html=True)
 
+tab_options = st.sidebar.radio(
+    "🔎 Navigate",
+    [
+        "🏠 Home",
+        "📊 Stock Dashboard", 
+        "💬 Finance Bot",
+        "🎯 Goal Planner",
+        "💼 Portfolio Tracker",
+        "💸 SIP Calculator"
+    ]
+)
 
-# Home Tab
+# Navigation status
+nav_status = {
+    "🏠 Home": "🏠 Home Page",
+    "📊 Stock Dashboard": "📊 Stock Analysis", 
+    "💬 Finance Bot": "🤖 AI Assistant",
+    "🎯 Goal Planner": "🎯 Financial Goals",
+    "💼 Portfolio Tracker": "📂 Portfolio Management", 
+    "💸 SIP Calculator": "💸 Investment Calculator"
+}
+
+st.sidebar.success(f"✅ {nav_status[tab_options]}")
+
+# Home Tab with enhanced design
 if tab_options == "🏠 Home":
-    st.markdown("## 🏠 Welcome")
+    # Hero Section
     st.markdown("""
-    <div style='font-size:18px;'>
-        Welcome to the <b>Artha.ai</b>. This tool helps you:
-        <ul>
-            <li>💹 Predict future stock prices using deep learning</li>
-            <li>📈 Analyze RSI, trends, and risks</li>
-            <li>🧠 Get personalized advice via Gemini AI</li>
-            <li>🎯 Plan your savings based on your financial goals</li>
-        </ul>
+    <div class="main-header">
+        <h1>🏠 Welcome to Artha.ai</h1>
+        <p>Your intelligent financial companion powered by AI and deep learning</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Feature cards
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-icon">📈</div>
+            <div class="feature-title">Stock Predictions</div>
+            <div class="feature-desc">Advanced ML models predict future stock prices with technical analysis and risk assessment</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <div class="feature-title">Goal Planning</div>
+            <div class="feature-desc">Smart savings calculator with inflation adjustment and growth projections</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-icon">🤖</div>
+            <div class="feature-title">AI Financial Advisor</div>
+            <div class="feature-desc">Get personalized financial advice powered by Gemini AI for informed decisions</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-icon">💼</div>
+            <div class="feature-title">Portfolio Tracking</div>
+            <div class="feature-desc">Real-time portfolio monitoring with performance analytics and allocation insights</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+# Stock Dashboard Tab with enhanced UI
+elif tab_options == "📊 Stock Dashboard":
+    st.markdown("""
+    <div class="main-header">
+        <h1>📈 Stock Analysis & Predictions</h1>
+        <p>AI-powered stock analysis with technical indicators and price predictions</p>
     </div>
     """, unsafe_allow_html=True)
 
-# Stock Dashboard Tab
-elif tab_options == "📊 Stock Dashboard":
-    st.markdown("## 📈 Stock Analysis & Predictions")
-
-    # --- Initialize session state variables ---
+    # Initialize session state variables
     if "symbols_input" not in st.session_state:
         st.session_state.symbols_input = "AAPL, MSFT"
     if "last_symbols" not in st.session_state:
@@ -221,33 +500,40 @@ elif tab_options == "📊 Stock Dashboard":
     if "symbols" not in st.session_state:
         st.session_state.symbols = []
 
-    # --- Stock symbols input ---
-    symbols_input = st.text_input(
-        "📥 Enter stock symbols (comma-separated)",
-        value=st.session_state.symbols_input,
-        help="E.g., AAPL, GOOGL, MSFT"
-    )
-
-    # Update stored input if changed
-    if symbols_input != st.session_state.symbols_input:
-        st.session_state.symbols_input = symbols_input
-
-    col1, col2 = st.columns([1, 3])
+    # Input section with enhanced styling
+    st.markdown("### 📥 Stock Selection")
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
     with col1:
-        analyze_btn = st.button("🔍 Analyze", use_container_width=True)
+        symbols_input = st.text_input(
+            "Enter stock symbols (comma-separated)",
+            value=st.session_state.symbols_input,
+            placeholder="e.g., AAPL, GOOGL, MSFT, TSLA",
+            help="Enter valid stock ticker symbols separated by commas"
+        )
+    
     with col2:
-        if st.button("🔄 Refresh Data", use_container_width=True):
+        analyze_btn = st.button("🔍 Analyze", use_container_width=True, type="primary")
+    
+    with col3:
+        refresh_btn = st.button("🔄 Refresh", use_container_width=True)
+        if refresh_btn:
             load_stock_data.clear()
             process_stock_data.clear()
             st.session_state.stock_data = None
             st.session_state.results = {}
             st.rerun()
 
-    # --- Fetch & process data only if Analyze is clicked or symbols changed ---
+    # Update stored input if changed
+    if symbols_input != st.session_state.symbols_input:
+        st.session_state.symbols_input = symbols_input
+
+    # Fetch & process data
     symbols_changed = st.session_state.symbols_input != st.session_state.last_symbols
     if analyze_btn or (symbols_changed and st.session_state.stock_data is None):
         st.session_state.last_symbols = st.session_state.symbols_input
         symbols = [s.strip().upper() for s in st.session_state.symbols_input.split(",") if s.strip()]
+        
         if not symbols:
             st.warning("⚠️ Please enter at least one stock symbol")
             st.stop()
@@ -260,17 +546,19 @@ elif tab_options == "📊 Stock Dashboard":
                     st.session_state.stock_data = stock_data
                     st.session_state.results = results
                     st.session_state.symbols = symbols
+                    st.success("✅ Analysis complete!")
                 else:
-                    st.warning("⚠️ Prediction failed for the entered symbols. Displaying raw data if available.")
-                    st.session_state.stock_data = stock_data # Keep raw data if processing fails
+                    st.warning("⚠️ Prediction failed. Displaying available data.")
+                    st.session_state.stock_data = stock_data
                     st.session_state.results = {}
             else:
-                st.error("⚠️ Unable to fetch stock data or data is empty. Please try again or check symbols.")
+                st.error("⚠️ Unable to fetch stock data. Please verify symbols and try again.")
                 st.session_state.stock_data = None
                 st.session_state.results = {}
 
-    # --- Display results if available ---
+    # Display results with enhanced design
     if st.session_state.stock_data is not None and st.session_state.results:
+        st.markdown("### 📊 Analysis Results")
         tabs = st.tabs([f"📊 {symbol}" for symbol in st.session_state.symbols])
 
         for idx, symbol in enumerate(st.session_state.symbols):
@@ -278,124 +566,145 @@ elif tab_options == "📊 Stock Dashboard":
                 results = st.session_state.results
                 stock_data = st.session_state.stock_data
 
-                # Check for prediction data availability for the specific symbol
                 if symbol not in results or not isinstance(results[symbol], dict) or \
                    'predicted' not in results[symbol] or 'actual' not in results[symbol] or \
                    len(results[symbol]['predicted']) == 0 or len(results[symbol]['actual']) == 0:
-                    st.error(f"⚠️ No sufficient prediction data available for {symbol}. Raw data may be displayed below.")
-                    # Attempt to show raw data if predictions failed for this symbol
+                    st.error(f"⚠️ No sufficient prediction data available for {symbol}")
                     if symbol in stock_data.columns and not stock_data.empty:
-                        st.write(f"Displaying raw price data for {symbol}:")
-                        st.line_chart(stock_data[[symbol]])
-                    continue # Skip detailed prediction display for this symbol
-
+                        st.markdown("#### Raw Price Data")
+                        fig = px.line(stock_data, y=symbol, title=f"{symbol} Price History")
+                        fig.update_layout(
+                            plot_bgcolor='rgba(0,0,0,0)',
+                            paper_bgcolor='rgba(0,0,0,0)',
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                    continue
 
                 predicted = results[symbol]['predicted']
                 actual = results[symbol]['actual']
 
-                col1, col2 = st.columns([2, 1])
-                with col1:
-                    st.markdown("### Price Prediction")
-                    # Corrected: Remove direct boolean evaluation of 'actual' and 'predicted'
-                    if len(actual) > 0 and len(predicted) > 0:
-                        change_percentage = ((predicted[-1] - actual[-1]) / actual[-1]) * 100
-                        m1, m2 = st.columns(2)
-                        with m1:
-                            st.metric("📈 Current Price", f"${actual[-1]:.2f}")
-                        with m2:
-                            st.metric("🔮 Predicted", f"${predicted[-1]:.2f}", f"{change_percentage:+.2f}%")
-
-                        # Ensure index matches the length of predicted/actual for chart_data
-                        # Use a common index that aligns with the results, assuming predicted/actual are last parts of stock_data
-                        chart_index_start = max(0, len(stock_data.index) - len(predicted))
-                        
-                        chart_data = pd.DataFrame({
-                            "Predicted": predicted,
-                            "Actual": actual
-                        }, index=stock_data.index[chart_index_start:chart_index_start + len(predicted)]) # Ensure index slice is correct
-                        st.line_chart(chart_data, use_container_width=True)
-                    else:
-                        st.info("Not enough valid data for price prediction chart for this symbol.")
-
-                with col2:
-                    st.markdown("### 📊 Technical Analysis")
-                    # Ensure symbol column exists in stock_data before computing RSI
+                # Metrics row
+                col1, col2, col3, col4 = st.columns(4)
+                
+                if len(actual) > 0 and len(predicted) > 0:
+                    current_price = actual[-1]
+                    predicted_price = predicted[-1]
+                    change_percentage = ((predicted_price - current_price) / current_price) * 100
+                    
+                    with col1:
+                        st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-value">${current_price:.2f}</div>
+                            <div class="metric-label">Current Price</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col2:
+                        st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-value">${predicted_price:.2f}</div>
+                            <div class="metric-label">Predicted Price</div>
+                            <div class="metric-change {'positive' if change_percentage > 0 else 'negative'}">
+                                {change_percentage:+.2f}%
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Technical indicators
                     if symbol in stock_data.columns and not stock_data.empty:
-                        rsi = compute_rsi(stock_data[symbol]) # Assuming compute_rsi returns a Series
+                        rsi = compute_rsi(stock_data[symbol])
                         rsi_value = rsi.dropna().iloc[-1] if not rsi.empty else 50
                     else:
-                        rsi = pd.Series([]) # Empty Series if no data
-                        rsi_value = 50 # Default RSI
-                        st.warning(f"No valid stock data for {symbol} to compute RSI.")
-
+                        rsi_value = 50
                     
-                    # Ensure predicted and actual have values for trend calculation
-                    trend = "➡️ Neutral"
-                    if len(predicted) > 0 and len(actual) > 0: # Corrected: Use len() check
-                        trend = "📈 Uptrend" if predicted[-1] > actual[-1] * 1.01 else "📉 Downtrend" if predicted[-1] < actual[-1] * 0.99 else "➡️ Neutral"
-                    
-                    rsi_status = "🔥 Overbought" if rsi_value > 70 else "❄️ Oversold" if rsi_value < 30 else "⚖️ Neutral"
                     risk = calculate_risk(symbol, stock_data, results)
-                    strategy = get_strategy(get_advice(predicted), risk)
-
-                    st.metric("📊 RSI", f"{rsi_value:.1f}", rsi_status.split()[0]) # Adjusted to show only the status text
-                    st.metric("📈 Trend", trend.split()[0]) # Adjusted to show only the status text
-                    st.metric("⚠️ Risk", f"{risk:.1f}/10")
-                    st.info(strategy)
-
-                with st.expander(f"📊 RSI History - {symbol}"):
-                    if not rsi.empty:
-                        st.line_chart(rsi)
-                    else:
-                        st.info("RSI data not available for this symbol.")
-
-
-                with st.expander(f"🗞️ Latest News - {symbol}"):
-                    news_content = fetch_stock_news(symbol)
-                    if news_content and news_content != "No news available (dummy data).": # Check against dummy text too
-                        st.markdown(news_content)
-                    else:
-                        st.info("No news available for this symbol.")
-
-                # Ensure chart_data is defined and not empty before allowing download
-                # This check ensures 'chart_data' exists from the price prediction section
-                if 'chart_data' in locals() and isinstance(chart_data, pd.DataFrame) and not chart_data.empty:
-                    # Align RSI data for download by taking the last 'len(predicted)' values
-                    rsi_for_download = rsi.iloc[-len(predicted):] if not rsi.empty and len(rsi) >= len(predicted) else [None]*len(predicted)
                     
-                    st.download_button(
-                        label="📥 Download Data",
-                        data=pd.DataFrame({
-                            "Date": stock_data.index[chart_index_start:chart_index_start + len(predicted)], # Use correct slice
-                            "Predicted": predicted,
-                            "Actual": actual,
-                            "RSI": rsi_for_download
-                        }).to_csv(index=False),
-                        file_name=f"{symbol}_prediction.csv",
-                        mime="text/csv"
-                    )
-                else:
-                    st.info("No data to download yet for this symbol (predictions might be missing).")
+                    with col3:
+                        rsi_status = "Overbought" if rsi_value > 70 else "Oversold" if rsi_value < 30 else "Neutral"
+                        rsi_color = "negative" if rsi_value > 70 else "positive" if rsi_value < 30 else "neutral"
+                        st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-value">{rsi_value:.1f}</div>
+                            <div class="metric-label">RSI</div>
+                            <div class="metric-change {rsi_color}">{rsi_status}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col4:
+                        risk_color = "negative" if risk > 7 else "neutral" if risk > 4 else "positive"
+                        st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-value">{risk:.1f}/10</div>
+                            <div class="metric-label">Risk Score</div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
-                # --- Gemini Q&A ---
+                    # Price prediction chart
+                    st.markdown("#### 📈 Price Prediction Chart")
+                    chart_index_start = max(0, len(stock_data.index) - len(predicted))
+                    chart_data = pd.DataFrame({
+                        "Actual": actual,
+                        "Predicted": predicted
+                    }, index=stock_data.index[chart_index_start:chart_index_start + len(predicted)])
+                    
+                    fig = px.line(chart_data, title=f"{symbol} - Actual vs Predicted Prices")
+                    fig.update_layout(
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        xaxis_title="Date",
+                        yaxis_title="Price ($)"
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+
+                # Additional analysis sections
+                col_left, col_right = st.columns([2, 1])
+                
+                with col_left:
+                    with st.expander(f"📊 Technical Analysis - {symbol}"):
+                        if not rsi.empty:
+                            fig_rsi = px.line(rsi, title="RSI History")
+                            fig_rsi.add_hline(y=70, line_dash="dash", line_color="red", annotation_text="Overbought")
+                            fig_rsi.add_hline(y=30, line_dash="dash", line_color="green", annotation_text="Oversold")
+                            fig_rsi.update_layout(
+                                plot_bgcolor='rgba(0,0,0,0)',
+                                paper_bgcolor='rgba(0,0,0,0)',
+                            )
+                            st.plotly_chart(fig_rsi, use_container_width=True)
+                        else:
+                            st.info("RSI data not available")
+                
+                with col_right:
+                    with st.expander(f"🗞️ Latest News - {symbol}"):
+                        news_content = fetch_stock_news(symbol)
+                        if news_content and news_content != "No news available (dummy data).":
+                            st.markdown(news_content)
+                        else:
+                            st.info("No recent news available")
+
+                # AI Analysis section
+                st.markdown("#### 🤖 AI Analysis")
                 query_key = f"query_{symbol}"
                 advice_key = f"advice_{symbol}"
 
                 if query_key not in st.session_state:
                     st.session_state[query_key] = ""
 
-                with st.form(key=f"form_{symbol}"):
-                    query = st.text_input(
-                        f"🤖 Ask Gemini about {symbol}:",
-                        value=st.session_state.get(query_key, "")
-                    )
-                    submitted = st.form_submit_button(f"Get Advice for {symbol}")
+                with st.form(key=f"ai_form_{symbol}"):
+                    col_query, col_submit = st.columns([3, 1])
+                    with col_query:
+                        query = st.text_input(
+                            f"Ask AI about {symbol}:",
+                            value=st.session_state.get(query_key, ""),
+                            placeholder=f"e.g., Should I invest in {symbol} now?"
+                        )
+                    with col_submit:
+                        submitted = st.form_submit_button("Get Advice", use_container_width=True)
 
                     if submitted:
                         if query.strip():
                             st.session_state[query_key] = query
                             try:
-                                with st.spinner("🤔 Analyzing your question..."):
+                                with st.spinner("🤔 Analyzing..."):
                                     advice = get_general_financial_advice(
                                         query,
                                         [symbol],
@@ -404,65 +713,113 @@ elif tab_options == "📊 Stock Dashboard":
                                     )
                                     st.session_state[advice_key] = advice
                             except Exception as e:
-                                st.error(f"Gemini error: {e}")
-                                st.session_state[advice_key] = f"Error getting advice: {e}" # Store error message
+                                st.error(f"AI analysis error: {e}")
+                                st.session_state[advice_key] = f"Error: {e}"
                         else:
-                            st.warning("Please enter a question.")
-                            st.session_state[advice_key] = "" # Clear advice if query is empty
+                            st.warning("Please enter a question")
 
                 if advice_key in st.session_state and st.session_state[advice_key]:
-                    st.markdown("### 💡 Gemini's Advice")
-                    st.markdown(st.session_state[advice_key])
+                    st.markdown("##### 💡 AI Recommendation")
+                    st.info(st.session_state[advice_key])
 
-                if st.button(f"Clear Advice for {symbol}", key=f"clear_advice_{symbol}"):
-                    st.session_state.pop(advice_key, None)
-                    st.session_state.pop(query_key, None)
-                    st.rerun()
-
+                # Download section
+                if 'chart_data' in locals() and isinstance(chart_data, pd.DataFrame) and not chart_data.empty:
+                    rsi_for_download = rsi.iloc[-len(predicted):] if not rsi.empty and len(rsi) >= len(predicted) else [None]*len(predicted)
+                    
+                    download_data = pd.DataFrame({
+                        "Date": stock_data.index[chart_index_start:chart_index_start + len(predicted)],
+                        "Predicted": predicted,
+                        "Actual": actual,
+                        "RSI": rsi_for_download
+                    }).to_csv(index=False)
+                    
+                    st.download_button(
+                        label=f"📥 Download {symbol} Analysis",
+                        data=download_data,
+                        file_name=f"{symbol}_analysis.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
 
 # Finance Bot Tab
 elif tab_options == "💬 Finance Bot":
-    st.subheader("💬 Ask Gemini Finance Bot")
-    query = st.text_input("🔍 Ask a financial question", key="general_query")
-    if st.button("Get Advice"):
+    st.markdown("""
+    <div class="main-header">
+        <h1>🤖 AI Financial Advisor</h1>
+        <p>Get personalized financial advice powered by advanced AI</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Chat interface
+    st.markdown("### 💬 Ask Your Financial Questions")
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        query = st.text_input(
+            "What would you like to know?", 
+            key="general_query",
+            placeholder="e.g., How should I diversify my portfolio?"
+        )
+    with col2:
+        get_advice_btn = st.button("Get Advice", use_container_width=True, type="primary")
+    
+    if get_advice_btn:
         if query:
             try:
-                advice = get_general_financial_advice(query)
-                st.session_state["advice"] = advice
+                with st.spinner("🤔 AI is thinking..."):
+                    advice = get_general_financial_advice(query)
+                    st.session_state["advice"] = advice
+                    st.success("✅ Analysis complete!")
             except Exception as e:
-                st.error(f"Error: {e}")
-                st.session_state["advice"] = f"Error getting advice: {e}" # Store error message
+                st.error(f"Error getting advice: {e}")
+                st.session_state["advice"] = f"Error: {e}"
         else:
-            st.warning("Please enter a query.")
-            st.session_state["advice"] = "" # Clear advice if query is empty
-    if "advice" in st.session_state:
-        st.markdown(f"🧠 Gemini says:\n\n{st.session_state['advice']}")
+            st.warning("Please enter a question")
+            st.session_state["advice"] = ""
+    
+    if "advice" in st.session_state and st.session_state["advice"]:
+        st.markdown("### 💡 AI Recommendation")
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">Financial Advisor Says:</div>
+            <div style="margin-top: 1rem; line-height: 1.6;">
+                {st.session_state['advice']}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-# --- Helper function for Goal Planner growth simulation ---
-def _simulate_goal_growth(
-    current_savings: float,
-    monthly_saving: float,
-    years: int,
-    annual_return: float
-) -> pd.DataFrame:
+    # Sample questions
+    st.markdown("### 💭 Sample Questions")
+    sample_questions = [
+        "What's the best investment strategy for beginners?",
+        "How much should I save for retirement?",
+        "Should I invest in stocks or bonds?",
+        "What are the tax implications of my investments?"
+    ]
     
+    cols = st.columns(2)
+    for i, question in enumerate(sample_questions):
+        with cols[i % 2]:
+            if st.button(question, key=f"sample_{i}", use_container_width=True):
+                st.session_state["general_query"] = question
+
+# Helper function for Goal Planner
+def _simulate_goal_growth(current_savings: float, monthly_saving: float, years: int, annual_return: float) -> pd.DataFrame:
     monthly_rate = (annual_return / 100) / 12
-    
     data = []
-    current_balance = float(current_savings) # Ensure it's float for calculations
+    current_balance = float(current_savings)
     
     for year_num in range(1, years + 1):
         start_balance_year = current_balance
         contributions_this_year = 0
         interest_this_year = 0
         
-        # Simulate month by month for compounding interest and contributions
         for month in range(12):
             monthly_interest = current_balance * monthly_rate
-            current_balance += monthly_interest # Interest added
+            current_balance += monthly_interest
             interest_this_year += monthly_interest
             
-            current_balance += monthly_saving # Contribution added
+            current_balance += monthly_saving
             contributions_this_year += monthly_saving
             
         end_balance_year = current_balance
@@ -477,170 +834,174 @@ def _simulate_goal_growth(
         
     return pd.DataFrame(data)
 
-
-# Goal Planner Tab (Dynamic Version)
+# Goal Planner Tab
 if tab_options == "🎯 Goal Planner":
-    st.markdown("## 🎯 Financial Goal Planner: Your Journey to Financial Freedom")
-    st.markdown("Set your financial aspirations and let's calculate a dynamic plan to achieve them! See how your savings grow and explore different scenarios.")
+    st.markdown("""
+    <div class="main-header">
+        <h1>🎯 Financial Goal Planner</h1>
+        <p>Plan your financial future with smart savings strategies</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.subheader("📝 Define Your Goal")
+    st.markdown("### 📝 Define Your Financial Goal")
 
-    col_goal_name, col_current_savings = st.columns(2)
-    with col_goal_name:
+    # Input form
+    col1, col2 = st.columns(2)
+    with col1:
         goal_name = st.text_input(
-            "✨ What are you saving for?", 
-            value=st.session_state.get('planner_goal_name', ""), 
-            placeholder="e.g., Dream Vacation, Retirement, New Car",
-            key="planner_goal_name_input"
+            "Goal Name",
+            value=st.session_state.get('planner_goal_name', ""),
+            placeholder="e.g., Dream Vacation, Emergency Fund"
         )
-    with col_current_savings:
-        current_savings = st.number_input(
-            "💸 Current Savings (₹)", 
-            min_value=0.0, 
-            value=None if st.session_state.get('planner_current_savings') is None else st.session_state['planner_current_savings'], 
-            format="%.2f",
-            placeholder="Example 500.00",
-            key="planner_current_savings_input",
-            help="The amount you currently have saved towards this goal."
-        )
-
-    col_target_amount, col_years, col_return = st.columns(3)
-
-    with col_target_amount:
         target_amount = st.number_input(
-            "🎯 Target Amount (₹)", 
-            min_value=1000.0, 
-            value=None if st.session_state.get('planner_target_amount') is None else st.session_state['planner_target_amount'], 
-            placeholder="Example 10000.00",
-            format="%.2f",
-            key="planner_target_amount_input",
-            help="The total amount you want to save."
-        )
-    with col_years:
-        years = st.slider(
-            "📆 Duration (years)", 
-            1, 50, 
-            st.session_state.get('planner_years', 10), 
-            key="planner_years_input",
-            help="The number of years you have to reach your goal."
-        )
-    with col_return:
-        annual_return = st.slider(
-            "📈 Expected Annual Return (%)", 
-            0, 20, 
-            st.session_state.get('planner_annual_return', 7), 
-            key="planner_annual_return_input",
-            help="The average annual interest rate you expect on your savings/investments."
-        )
-
-    # --- Inflation Toggle and Slider ---
-    inflation_enabled = st.checkbox("Adjust for Inflation?", value=st.session_state.get("planner_inflation_enabled", False), key="planner_inflation_enabled")
-    inflation_rate = 0
-    if inflation_enabled:
-        inflation_rate = st.slider(
-            "Inflation Rate (%)",
-            min_value=0, max_value=15, value=5,
-            key="planner_inflation_rate",
-            help="Expected average annual inflation rate."
+            "Target Amount (₹)",
+            min_value=1000.0,
+            value=100000.0,
+            format="%.2f"
         )
     
-    # Store inputs in session state for persistence
-    st.session_state['planner_goal_name'] = goal_name
-    st.session_state['planner_current_savings'] = current_savings
-    st.session_state['planner_target_amount'] = target_amount
-    st.session_state['planner_years'] = years
-    st.session_state['planner_annual_return'] = annual_return
+    with col2:
+        current_savings = st.number_input(
+            "Current Savings (₹)",
+            min_value=0.0,
+            value=10000.0,
+            format="%.2f"
+        )
+        years = st.slider("Time Horizon (years)", 1, 30, 10)
 
-    run_calculation = st.button("🚀 Calculate My Plan", type="primary")
+    col3, col4 = st.columns(2)
+    with col3:
+        annual_return = st.slider("Expected Annual Return (%)", 1, 20, 8)
+    
+    with col4:
+        inflation_enabled = st.checkbox("Adjust for Inflation", value=False)
+        inflation_rate = st.slider("Inflation Rate (%)", 0, 10, 5) if inflation_enabled else 0
 
-    if run_calculation:
-        # --- Calculate WITHOUT inflation ---
-        real_annual_return_no_inflation = annual_return
-        base_monthly_saving_no_inflation = calculate_savings_goal(target_amount, years, real_annual_return_no_inflation).get('monthly_saving', 0.0)
-        growth_df_no_inflation = _simulate_goal_growth(current_savings, base_monthly_saving_no_inflation, years, real_annual_return_no_inflation)
-        final_balance_no_inflation = growth_df_no_inflation['Ending Balance'].iloc[-1] if not growth_df_no_inflation.empty else current_savings
+    # Calculate button
+    if st.button("🚀 Calculate My Plan", type="primary", use_container_width=True):
+        # Calculations
+        real_return_no_inflation = annual_return
+        real_return_with_inflation = annual_return - inflation_rate if inflation_enabled else annual_return
+        
+        monthly_saving_no_inflation = calculate_savings_goal(target_amount, years, real_return_no_inflation).get('monthly_saving', 0.0)
+        monthly_saving_with_inflation = calculate_savings_goal(target_amount, years, real_return_with_inflation).get('monthly_saving', 0.0)
+        
+        growth_df_no_inflation = _simulate_goal_growth(current_savings, monthly_saving_no_inflation, years, real_return_no_inflation)
+        growth_df_with_inflation = _simulate_goal_growth(current_savings, monthly_saving_with_inflation, years, real_return_with_inflation)
+        
+        # Display results
+        st.markdown("### 📊 Your Investment Plan")
+        
+        tab1, tab2 = st.tabs(["Without Inflation", "With Inflation"])
+        
+        with tab1:
+            col_a, col_b, col_c = st.columns(3)
+            with col_a:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-value">₹{monthly_saving_no_inflation:,.0f}</div>
+                    <div class="metric-label">Monthly Investment Needed</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col_b:
+                final_amount = growth_df_no_inflation['Ending Balance'].iloc[-1] if not growth_df_no_inflation.empty else 0
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-value">₹{final_amount:,.0f}</div>
+                    <div class="metric-label">Final Amount</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col_c:
+                total_contributions = monthly_saving_no_inflation * years * 12 + current_savings
+                interest_earned = final_amount - total_contributions
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-value">₹{interest_earned:,.0f}</div>
+                    <div class="metric-label">Interest Earned</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Growth chart
+            if not growth_df_no_inflation.empty:
+                fig = px.bar(growth_df_no_inflation, x='Year', y=['Annual Contributions', 'Interest Earned'],
+                           title="Annual Growth Breakdown")
+                fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+                st.plotly_chart(fig, use_container_width=True)
+        
+        with tab2:
+            if inflation_enabled:
+                col_a, col_b, col_c = st.columns(3)
+                with col_a:
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-value">₹{monthly_saving_with_inflation:,.0f}</div>
+                        <div class="metric-label">Monthly Investment Needed</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col_b:
+                    final_amount_inf = growth_df_with_inflation['Ending Balance'].iloc[-1] if not growth_df_with_inflation.empty else 0
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-value">₹{final_amount_inf:,.0f}</div>
+                        <div class="metric-label">Final Amount</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col_c:
+                    real_purchasing_power = final_amount_inf / ((1 + inflation_rate/100) ** years)
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-value">₹{real_purchasing_power:,.0f}</div>
+                        <div class="metric-label">Real Purchasing Power</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                if not growth_df_with_inflation.empty:
+                    fig_inf = px.bar(growth_df_with_inflation, x='Year', y=['Annual Contributions', 'Interest Earned'],
+                               title="Annual Growth Breakdown (Inflation Adjusted)")
+                    fig_inf.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+                    st.plotly_chart(fig_inf, use_container_width=True)
+            else:
+                st.info("Enable inflation adjustment to see inflation-adjusted projections")
 
-        # --- Calculate WITH inflation (if enabled) ---
-        real_annual_return_with_inflation = annual_return - inflation_rate if inflation_enabled else annual_return
-        base_monthly_saving_with_inflation = calculate_savings_goal(target_amount, years, real_annual_return_with_inflation).get('monthly_saving', 0.0)
-        growth_df_with_inflation = _simulate_goal_growth(current_savings, base_monthly_saving_with_inflation, years, real_annual_return_with_inflation)
-        final_balance_with_inflation = growth_df_with_inflation['Ending Balance'].iloc[-1] if not growth_df_with_inflation.empty else current_savings
-
-        # Save results for display
-        st.session_state["planner_results"] = {
-            'goal_name': goal_name,
-            'current_savings': current_savings,
-            'target_amount': target_amount,
-            'years': years,
-            'annual_return': annual_return,
-            'inflation_enabled': inflation_enabled,
-            'inflation_rate': inflation_rate,
-            'real_annual_return_no_inflation': real_annual_return_no_inflation,
-            'real_annual_return_with_inflation': real_annual_return_with_inflation,
-            'base_monthly_saving_no_inflation': base_monthly_saving_no_inflation,
-            'base_monthly_saving_with_inflation': base_monthly_saving_with_inflation,
-            'final_balance_no_inflation': final_balance_no_inflation,
-            'final_balance_with_inflation': final_balance_with_inflation,
-            'growth_df_no_inflation': growth_df_no_inflation,
-            'growth_df_with_inflation': growth_df_with_inflation
-        }
-
-    # --- Display Results ---
-    if st.session_state["planner_results"] is not None:
-        results = st.session_state["planner_results"]
-        st.markdown("### 📊 Investment Analysis")
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("#### Without Inflation")
-            st.write(f"**Monthly Saving Needed:** ₹{results['base_monthly_saving_no_inflation']:.2f}")
-            st.write(f"**Final Balance:** ₹{results['final_balance_no_inflation']:.2f}")
-            st.write(f"**Annual Return Used:** {results['real_annual_return_no_inflation']}%")
-            st.dataframe(results['growth_df_no_inflation'])
-        with col2:
-            st.markdown("#### With Inflation")
-            st.write(f"**Monthly Saving Needed:** ₹{results['base_monthly_saving_with_inflation']:.2f}")
-            st.write(f"**Final Balance:** ₹{results['final_balance_with_inflation']:.2f}")
-            st.write(f"**Annual Return Used:** {results['real_annual_return_with_inflation']}%")
-            st.write(f"**Inflation Rate:** {results['inflation_rate']}%")
-            st.dataframe(results['growth_df_with_inflation'])
-
-    # Add a reset button for the plan
-    # This button appears if a plan has been calculated OR if any inputs are not default OR what-if is active
-    if st.session_state["planner_results"] is not None or (
-        st.session_state.get('planner_goal_name') != "My Dream Goal" or
-        st.session_state.get('planner_current_savings') != 0.0 or
-        st.session_state.get('planner_target_amount') != 1000000.0 or
-        st.session_state.get('planner_years') != 10 or
-        st.session_state.get('planner_annual_return') != 7 or
-        st.session_state.show_what_if is True
-    ): 
-        if st.button("🔄 Reset Goal Planner", key="reset_goal_plan_button"):
-            st.session_state["planner_results"] = None
-            st.session_state['planner_goal_name'] = ""
-            st.session_state['planner_current_savings'] = None
-            st.session_state['planner_target_amount'] = None
-            st.session_state['planner_years'] = None
-            st.session_state['planner_annual_return'] = None
-            st.session_state.show_what_if = False # Reset what-if toggle
-            st.rerun()
-# Portfolio Tracking Tab
-
+# Portfolio Tracker Tab
 if tab_options == "💼 Portfolio Tracker":
-    st.markdown("## 💼 Portfolio Tracker")
+    st.markdown("""
+    <div class="main-header">
+        <h1>💼 Portfolio Tracker</h1>
+        <p>Monitor your investments and track performance in real-time</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Initialize portfolio if not present
+    # Initialize portfolio
     if "portfolio" not in st.session_state:
         st.session_state["portfolio"] = []
 
-    # Form to add new holdings
+    # Add holding form
+    st.markdown("### ➕ Add Investment")
     with st.form("add_holding"):
-        st.subheader("➕ Add a Stock to Your Portfolio")
-        symbol = st.text_input("Symbol (e.g., AAPL, MSFT, HDB)")
-        units = st.number_input("Units Owned", min_value=0.0, format="%.2f")
-        buy_price = st.number_input("Buy Price per Unit", min_value=0.0)
-        buy_date = st.date_input("Buy Date")
-        add_clicked = st.form_submit_button("Add to Portfolio")
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            symbol = st.text_input("Symbol", placeholder="e.g., AAPL")
+        with col2:
+            units = st.number_input("Shares", min_value=0.0, format="%.2f")
+        with col3:
+            buy_price = st.number_input("Buy Price", min_value=0.0, format="%.2f")
+        with col4:
+            buy_date = st.date_input("Purchase Date")
+        
+        col_submit, col_clear = st.columns([1, 1])
+        with col_submit:
+            add_clicked = st.form_submit_button("Add to Portfolio", use_container_width=True, type="primary")
+        with col_clear:
+            if st.form_submit_button("Clear Portfolio", use_container_width=True):
+                st.session_state.portfolio = []
+                st.rerun()
+        
         if add_clicked and symbol.strip() and units > 0 and buy_price > 0:
             st.session_state.portfolio.append({
                 "symbol": symbol.strip().upper(),
@@ -648,244 +1009,276 @@ if tab_options == "💼 Portfolio Tracker":
                 "buy_price": buy_price,
                 "buy_date": str(buy_date)
             })
-            st.success(f"{symbol.strip().upper()} added to portfolio!")
+            st.success(f"✅ {symbol.strip().upper()} added to portfolio!")
+            st.rerun()
 
-    # Display portfolio if any holdings
+    # Display portfolio
     if st.session_state.portfolio:
         df = pd.DataFrame(st.session_state.portfolio)
-        st.write("Your portfolio holdings:", df)
-
-        # Get symbols from portfolio
         symbols = list(df["symbol"].unique())
         
         try:
-            # Fetch current prices
-            with st.spinner("Fetching current prices..."):
+            with st.spinner("📡 Fetching current prices..."):
                 prices_df = get_stock_data(symbols)
             
             if prices_df is None or prices_df.empty:
-                st.warning("Could not fetch current price data. Please try again later.")
+                st.warning("Could not fetch current prices")
                 latest_prices = {sym: 0 for sym in symbols}
             else:
-                # Get the latest price for each symbol
                 latest_prices = {}
                 for symbol in symbols:
                     if symbol in prices_df.columns:
                         latest_prices[symbol] = prices_df[symbol].iloc[-1]
                     else:
-                        st.warning(f"Could not fetch price for {symbol}")
                         latest_prices[symbol] = 0
-
         except Exception as e:
             st.error(f"Error fetching prices: {e}")
             latest_prices = {sym: 0 for sym in symbols}
 
-        # Compute current metrics
+        # Calculate metrics
         df["Current Price"] = df["symbol"].map(latest_prices)
         df["Current Value"] = df["Current Price"] * df["units"]
         df["Investment Cost"] = df["buy_price"] * df["units"]
-        df["Abs Gain/Loss"] = df["Current Value"] - df["Investment Cost"]
-        df["% Gain/Loss"] = ((df["Current Price"] - df["buy_price"]) / df["buy_price"]) * 100
+        df["Gain/Loss"] = df["Current Value"] - df["Investment Cost"]
+        df["% Change"] = ((df["Current Price"] - df["buy_price"]) / df["buy_price"]) * 100
 
         total_value = df["Current Value"].sum()
         total_cost = df["Investment Cost"].sum()
         total_gain_loss = total_value - total_cost
+        total_return_pct = ((total_value / total_cost) - 1) * 100 if total_cost > 0 else 0
+
+        # Portfolio summary
+        st.markdown("### 📊 Portfolio Summary")
+        col1, col2, col3, col4 = st.columns(4)
         
-        if total_value > 0:
-            df["Allocation %"] = (df["Current Value"] / total_value * 100).fillna(0)
-        else:
-            df["Allocation %"] = 0
-
-        # Display portfolio summary
-        col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Total Investment", f"₹{total_cost:,.2f}")
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value">₹{total_cost:,.0f}</div>
+                <div class="metric-label">Total Invested</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
         with col2:
-            st.metric("Current Value", f"₹{total_value:,.2f}")
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value">₹{total_value:,.0f}</div>
+                <div class="metric-label">Current Value</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
         with col3:
-            st.metric("Total Gain/Loss", f"₹{total_gain_loss:,.2f}", 
-                     f"{((total_value/total_cost)-1)*100:.2f}%" if total_cost > 0 else "0%")
+            gain_loss_color = "positive" if total_gain_loss >= 0 else "negative"
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value">₹{total_gain_loss:,.0f}</div>
+                <div class="metric-label">Total Gain/Loss</div>
+                <div class="metric-change {gain_loss_color}">{total_return_pct:+.1f}%</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col4:
+            num_holdings = len(df)
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value">{num_holdings}</div>
+                <div class="metric-label">Holdings</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-        # Display detailed portfolio
-        st.dataframe(
-            df.style.format({
-                "buy_price": "₹{:.2f}",
-                "Current Price": "₹{:.2f}",
-                "Current Value": "₹{:.2f}",
-                "Investment Cost": "₹{:.2f}",
-                "Abs Gain/Loss": "₹{:.2f}",
-                "% Gain/Loss": "{:.2f}%",
-                "Allocation %": "{:.2f}%",
-            })
-        )
-
-        # Allocation Pie Chart
+        # Holdings table
+        st.markdown("### 📋 Holdings Details")
         if total_value > 0:
-            fig_alloc = px.pie(df, values="Current Value", names="symbol", 
-                              title="Portfolio Allocation by Symbol")
-            st.plotly_chart(fig_alloc, use_container_width=True)
+            df["Weight %"] = (df["Current Value"] / total_value * 100).round(1)
+        else:
+            df["Weight %"] = 0
+        
+        # Format the dataframe for display
+        display_df = df.copy()
+        display_df["Current Price"] = display_df["Current Price"].apply(lambda x: f"₹{x:.2f}")
+        display_df["buy_price"] = display_df["buy_price"].apply(lambda x: f"₹{x:.2f}")
+        display_df["Current Value"] = display_df["Current Value"].apply(lambda x: f"₹{x:,.0f}")
+        display_df["Investment Cost"] = display_df["Investment Cost"].apply(lambda x: f"₹{x:,.0f}")
+        display_df["Gain/Loss"] = display_df["Gain/Loss"].apply(lambda x: f"₹{x:,.0f}")
+        display_df["% Change"] = display_df["% Change"].apply(lambda x: f"{x:+.1f}%")
+        display_df["Weight %"] = display_df["Weight %"].apply(lambda x: f"{x:.1f}%")
+        
+        st.dataframe(display_df, use_container_width=True, hide_index=True)
 
-        # Download option for portfolio CSV
+        # Portfolio allocation chart
+        if total_value > 0:
+            st.markdown("### 🥧 Portfolio Allocation")
+            fig_pie = px.pie(df, values="Current Value", names="symbol", 
+                           title="Portfolio Distribution by Value")
+            fig_pie.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)'
+            )
+            st.plotly_chart(fig_pie, use_container_width=True)
+
+        # Download portfolio data
         csv_data = df.to_csv(index=False)
-        st.download_button("📥 Download Portfolio Data", csv_data, "portfolio.csv", "text/csv")
-
-        if st.button("🗑️ Clear Portfolio"):
-            st.session_state.portfolio = []
-            st.rerun()
-
+        st.download_button(
+            "📥 Download Portfolio Data",
+            csv_data,
+            "portfolio_data.csv",
+            "text/csv",
+            use_container_width=True
+        )
     else:
-        st.info("➕ Add holdings above to start tracking your portfolio.")
-if tab_options=="💸 SIP and Lumpsum Calculator":
-    st.markdown("## 📈 SIP & Lumpsum Investment Calculator")
-    st.markdown("Compare and visualize your investment outcomes using SIP and Lumpsum options with projected returns.")
+        st.info("Add some holdings above to start tracking your portfolio")
 
-    st.subheader("💡 Investment Inputs")
+# SIP Calculator Tab
+if tab_options == "💸 SIP Calculator":
+    st.markdown("""
+    <div class="main-header">
+        <h1>💸 SIP & Lumpsum Calculator</h1>
+        <p>Compare investment strategies and visualize your wealth growth</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Investment type selection
+    st.markdown("### 💡 Choose Investment Strategy")
+    investment_type = st.radio("Investment Type:", ["SIP (Systematic Investment Plan)", "Lumpsum Investment"], horizontal=True)
 
     col1, col2 = st.columns(2)
+    
     with col1:
-        investment_type = st.radio("Choose Investment Type:", ["SIP", "Lumpsum"], horizontal=True)
-
+        if "SIP" in investment_type:
+            amount = st.number_input("Monthly SIP Amount (₹)", min_value=500.0, value=5000.0, step=100.0)
+        else:
+            amount = st.number_input("Lumpsum Amount (₹)", min_value=10000.0, value=100000.0, step=1000.0)
+        
+        duration_years = st.slider("Investment Duration (Years)", 1, 40, 15)
+    
     with col2:
-        annual_return = st.slider("Expected Annual Return (%)", min_value=1, max_value=20, value=12)
-    
-    if investment_type == "SIP":
-        col_sip1, col_sip2 = st.columns(2)
-        with col_sip1:
-            monthly_investment = st.number_input("💰 Monthly Investment (₹)", min_value=500.0, value=5000.0, step=100.0)
-        with col_sip2:
-            duration_years = st.slider("⏳ Investment Duration (Years)", 1, 40, 10)
-    else:
-        col_lump1, col_lump2 = st.columns(2)
-        with col_lump1:
-            lumpsum_amount = st.number_input("💰 Lumpsum Amount (₹)", min_value=500.0, value=100000.0, step=500.0)
-        with col_lump2:
-            duration_years = st.slider("⏳ Investment Duration (Years)", 1, 40, 10)
-    
+        annual_return = st.slider("Expected Annual Return (%)", 1, 25, 12)
+        
+        # Step-up option for SIP
+        if "SIP" in investment_type:
+            step_up = st.checkbox("Annual Step-up")
+            step_up_rate = st.slider("Step-up Rate (%)", 0, 20, 10) if step_up else 0
+        else:
+            step_up = False
+            step_up_rate = 0
+
     # Calculate returns
-    calculate_btn = st.button("📊 Calculate Returns")
-    if calculate_btn:
+    if st.button("📊 Calculate Returns", type="primary", use_container_width=True):
         r = annual_return / 100
         n = duration_years
 
-        if investment_type == "SIP":
-            fv = monthly_investment * (((1 + r / 12) ** (n * 12) - 1) * (1 + r / 12)) / (r / 12)
-            total_invested = monthly_investment * n * 12
+        if "SIP" in investment_type:
+            if step_up:
+                # Calculate SIP with step-up
+                total_invested = 0
+                current_sip = amount
+                fv = 0
+                
+                for year in range(n):
+                    # Calculate FV for current year SIP
+                    remaining_years = n - year
+                    year_fv = current_sip * 12 * (((1 + r/12) ** (remaining_years * 12) - 1) / (r/12)) * (1 + r/12)
+                    fv += year_fv
+                    total_invested += current_sip * 12
+                    current_sip *= (1 + step_up_rate/100)  # Step up for next year
+            else:
+                # Regular SIP calculation
+                fv = amount * (((1 + r/12) ** (n * 12) - 1) * (1 + r/12)) / (r/12)
+                total_invested = amount * n * 12
         else:
-            fv = lumpsum_amount * ((1 + r) ** n)
-            total_invested = lumpsum_amount
+            # Lumpsum calculation
+            fv = amount * ((1 + r) ** n)
+            total_invested = amount
 
-        interest_earned = fv - total_invested
+        wealth_gained = fv - total_invested
 
-        # Display metrics
-        st.subheader("📈 Investment Summary")
+        # Display results
+        st.markdown("### 📈 Investment Results")
+        
         col_a, col_b, col_c = st.columns(3)
+        
         with col_a:
-            st.metric("Total Invested", f"₹{total_invested:,.2f}")
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value">₹{total_invested:,.0f}</div>
+                <div class="metric-label">Total Investment</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
         with col_b:
-            st.metric("Total Returns", f"₹{fv:,.2f}")
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value">₹{fv:,.0f}</div>
+                <div class="metric-label">Maturity Value</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
         with col_c:
-            st.metric("Interest Earned", f"₹{interest_earned:,.2f}")
+            returns_multiple = fv / total_invested if total_invested > 0 else 0
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value">₹{wealth_gained:,.0f}</div>
+                <div class="metric-label">Wealth Gained</div>
+                <div class="metric-change positive">{returns_multiple:.1f}x Returns</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-        # Donut chart
-        fig = go.Figure(data=[go.Pie(
-            labels=["Invested", "Interest Earned"],
-            values=[total_invested, interest_earned],
-            hole=.5,
-            marker=dict(colors=["#10b981", "#6366f1"])
-        )])
+        # Visualization
+        col_chart1, col_chart2 = st.columns(2)
+        
+        with col_chart1:
+            # Pie chart showing investment vs returns
+            fig_pie = go.Figure(data=[go.Pie(
+                labels=["Amount Invested", "Wealth Gained"],
+                values=[total_invested, wealth_gained],
+                hole=.6,
+                marker=dict(colors=["#667eea", "#764ba2"])
+            )])
+            fig_pie.update_layout(
+                title="Investment Composition",
+                showlegend=True,
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)'
+            )
+            st.plotly_chart(fig_pie, use_container_width=True)
+        
+        with col_chart2:
+            # Year-wise growth chart
+            growth_data = []
+            current_value = 0
+            current_invested = 0
+            
+            for year in range(1, n + 1):
+                if "SIP" in investment_type:
+                    current_invested += amount * 12
+                    # Simplified calculation for visualization
+                    current_value = current_invested * ((1 + r) ** (year/2))  # Approximate mid-year investment
+                else:
+                    current_invested = amount
+                    current_value = amount * ((1 + r) ** year)
+                
+                growth_data.append({
+                    'Year': year,
+                    'Invested': current_invested,
+                    'Value': current_value
+                })
+            
+            growth_df = pd.DataFrame(growth_data)
+            fig_line = px.line(growth_df, x='Year', y=['Invested', 'Value'],
+                             title="Investment Growth Over Time")
+            fig_line.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)'
+            )
+            st.plotly_chart(fig_line, use_container_width=True)
 
-        fig.update_layout(
-            title="📊 Investment Composition",
-            showlegend=True,
-            template="plotly_dark"
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-
-if tab_options=="💸 SIP and Lumpsum Calculator":
-    st.markdown("## 📈 SIP & Lumpsum Investment Calculator")
-    st.markdown("Compare and visualize your investment outcomes using SIP and Lumpsum options with projected returns.")
-
-    st.subheader("💡 Investment Inputs")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        investment_type = st.radio("Choose Investment Type:", ["SIP", "Lumpsum"], horizontal=True)
-
-    with col2:
-        annual_return = st.slider("Expected Annual Return (%)", min_value=1, max_value=20, value=12)
-    
-    if investment_type == "SIP":
-        col_sip1, col_sip2 = st.columns(2)
-        with col_sip1:
-            monthly_investment = st.number_input("💰 Monthly Investment (₹)", min_value=500.0, value=5000.0, step=100.0)
-        with col_sip2:
-            duration_years = st.slider("⏳ Investment Duration (Years)", 1, 40, 10)
-    else:
-        col_lump1, col_lump2 = st.columns(2)
-        with col_lump1:
-            lumpsum_amount = st.number_input("💰 Lumpsum Amount (₹)", min_value=500.0, value=100000.0, step=500.0)
-        with col_lump2:
-            duration_years = st.slider("⏳ Investment Duration (Years)", 1, 40, 10)
-    
-    # Calculate returns
-    calculate_btn = st.button("📊 Calculate Returns")
-    if calculate_btn:
-        r = annual_return / 100
-        n = duration_years
-
-        if investment_type == "SIP":
-            fv = monthly_investment * (((1 + r / 12) ** (n * 12) - 1) * (1 + r / 12)) / (r / 12)
-            total_invested = monthly_investment * n * 12
-        else:
-            fv = lumpsum_amount * ((1 + r) ** n)
-            total_invested = lumpsum_amount
-
-        interest_earned = fv - total_invested
-
-        # Display metrics
-        st.subheader("📈 Investment Summary")
-        col_a, col_b, col_c = st.columns(3)
-        with col_a:
-            st.metric("Total Invested", f"₹{total_invested:,.2f}")
-        with col_b:
-            st.metric("Total Returns", f"₹{fv:,.2f}")
-        with col_c:
-            st.metric("Interest Earned", f"₹{interest_earned:,.2f}")
-
-        # Donut chart
-        fig = go.Figure(data=[go.Pie(
-            labels=["Invested", "Interest Earned"],
-            values=[total_invested, interest_earned],
-            hole=.5,
-            marker=dict(colors=["#10b981", "#6366f1"])
-        )])
-
-        fig.update_layout(
-            title="📊 Investment Composition",
-            showlegend=True,
-            template="plotly_dark"
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-
-
-# --- Footer ---
-st.markdown("---")
+# Footer
 st.markdown("""
-<div style="text-align: center; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 10px; margin-top: 30px;">
-    <p style="color: #888; margin: 0;">
-        📊 <strong>Financial Advisory Bot</strong> | Empowering Your Financial Decisions<br>
-        Powered by Deep Learning & Gemini AI<br>
-        Developed by Rudrika Sharma & Team
-    </p>
-    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-        <small style="color: #666;">
-            Features: Stock Prediction | Technical Analysis | AI Chatbot | Dynamic Goal Planner
-        </small>
+<div class="footer">
+    <h3>📊 Artha.ai - Your Financial Companion</h3>
+    <p>Empowering smart financial decisions through AI and advanced analytics</p>
+    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2);">
+        <small>Developed with ❤️ by Rudrika Sharma & Team | Powered by Deep Learning & Gemini AI</small>
     </div>
 </div>
 """, unsafe_allow_html=True)
-
