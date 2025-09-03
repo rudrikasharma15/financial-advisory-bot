@@ -10,3 +10,6 @@ scikit-learn
 tensorflow
 deep-translator
 google-generativeai
+scipy
+cvxpy
+seaborn
