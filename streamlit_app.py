@@ -32,6 +32,92 @@ if _base_dir not in sys.path:
 # Import your login system
 from auth import auth_component
 
+# --- IMPT: Error Handling for logic.py ---
+# Ensure your logic.py file is in the same directory as this app.py
+# and contains ALL the functions listed below.
+# If logic.py is missing or functions are not defined there,
+# this try-except block will provide dummy functions to allow the app to run,
+# but the core financial/stock logic will not work as intended.
+try:
+    from logic import (
+        fetch_stock_data, compute_rsi, get_general_financial_advice,
+        calculate_savings_goal, get_stock_data, add_technical_indicators,
+        get_mock_macro_features, prepare_model, predict_stocks, fetch_stock_news,
+        get_advice, calculate_risk, get_strategy
+    )
+    # Flag to indicate if real logic is loaded
+    _LOGIC_LOADED = True
+except ImportError:
+    st.error("Error: `logic.py` not found or functions missing. Providing dummy functions. Please ensure `logic.py` is in the same directory and contains all required functions for full functionality.")
+    _LOGIC_LOADED = False
+
+    # Dummy implementations for development/testing when logic.py is absent
+    def fetch_stock_data(*args, **kwargs):
+        # st.warning("Dummy fetch_stock_data called.");
+        return pd.DataFrame()
+    def compute_rsi(*args, **kwargs):
+        # st.warning("Dummy compute_rsi called.");
+        return pd.Series([50.0, 55.0]) # Return a series for charting
+    def get_general_financial_advice(*args, **kwargs):
+        # st.warning("Dummy get_general_financial_advice called.");
+        return "This is dummy financial advice because `logic.py` could not be loaded."
+    def calculate_savings_goal(target_amount, years, annual_return):
+        # st.warning("Dummy calculate_savings_goal called.");
+        # Simplified dummy calculation for monthly saving needed to reach target_amount from ZERO
+        if years <= 0: # Avoid division by zero
+            return {'monthly_saving': target_amount / 12 if target_amount > 0 else 0.0}
+
+        monthly_rate = (annual_return / 100) / 12
+        num_months = years * 12
+
+        if num_months == 0:
+            monthly_saving = target_amount # If duration is zero, need to save all immediately
+        elif monthly_rate == 0: # No interest earned
+            monthly_saving = target_amount / num_months
+        else:
+            # Future Value of an Ordinary Annuity (PMT formula)
+            # PMT = FV * r / ((1 + r)^n - 1)
+            # This is a basic approximation for dummy purposes.
+            factor = ((1 + monthly_rate)**num_months - 1) / monthly_rate
+            monthly_saving = target_amount / factor if factor != 0 else target_amount / num_months
+
+        return {
+            'target_amount': target_amount,
+            'years': years,
+            'annual_return': annual_return,
+            'monthly_saving': monthly_saving
+        }
+    def get_stock_data(*args, **kwargs):
+        # st.warning("Dummy get_stock_data called.");
+        return pd.DataFrame({'Date': pd.to_datetime(['2023-01-01', '2023-01-02']), 'AAPL': [150, 152], 'MSFT': [250, 255]}).set_index('Date')
+    def add_technical_indicators(df, symbols):
+        # st.warning("Dummy add_technical_indicators called.");
+        return df # Return original df
+    def get_mock_macro_features(*args, **kwargs):
+        # st.warning("Dummy get_mock_macro_features called.");
+        return pd.DataFrame()
+    def prepare_model(*args, **kwargs):
+        # st.warning("Dummy prepare_model called.");
+        return None # Returns None to indicate no model
+    def predict_stocks(model, scaler_X, scaler_y, combined_scaled, X_test, target_cols, y_test, train_size):
+        # st.warning("Dummy predict_stocks called.");
+        # Provide some dummy prediction results to allow the dashboard to render
+        dummy_predicted = [155.0, 156.0]
+        dummy_actual = [153.0, 154.0]
+        return {'AAPL': {'predicted': dummy_predicted, 'actual': dummy_actual}, 'MSFT': {'predicted': [258.0, 260.0], 'actual': [256.0, 257.0]}}, {} # Return dummy results
+    def fetch_stock_news(*args, **kwargs):
+        # st.warning("Dummy fetch_stock_news called.");
+        return "No news available (dummy data)."
+    def get_advice(*args, **kwargs):
+        # st.warning("Dummy get_advice called.");
+        return "Generic advice (dummy data)."
+    def calculate_risk(*args, **kwargs):
+        # st.warning("Dummy calculate_risk called.");
+        return 5.0
+    def get_strategy(*args, **kwargs):
+        # st.warning("Dummy get_strategy called.");
+        return "General strategy (dummy data)."
+
 
 # ------------------------------------------------------------
 # 1. Login / Signup first
@@ -401,100 +487,6 @@ elif page == "Goal Planner":
             st.session_state.goals[idx]["progress"] = progress
             st.progress(int(progress / g["amount"] * 100))
             
-import streamlit as st
-import pandas as pd
-import time
-from PIL import Image
-from typing import Dict, Any, Optional, Tuple, List
-import plotly.express as px  # Added for new plots
-import plotly.graph_objects as go  # Added for new plots
-import numpy as np # Import numpy for isfinite check
-
-# --- IMPT: Error Handling for logic.py ---
-# Ensure your logic.py file is in the same directory as this app.py
-# and contains ALL the functions listed below.
-# If logic.py is missing or functions are not defined there,
-# this try-except block will provide dummy functions to allow the app to run,
-# but the core financial/stock logic will not work as intended.
-try:
-    from logic import (
-        fetch_stock_data, compute_rsi, get_general_financial_advice,
-        calculate_savings_goal, get_stock_data, add_technical_indicators,
-        get_mock_macro_features, prepare_model, predict_stocks, fetch_stock_news,
-        get_advice, calculate_risk, get_strategy
-    )
-    # Flag to indicate if real logic is loaded
-    _LOGIC_LOADED = True
-except ImportError:
-    st.error("Error: `logic.py` not found or functions missing. Providing dummy functions. Please ensure `logic.py` is in the same directory and contains all required functions for full functionality.")
-    _LOGIC_LOADED = False
-    
-    # Dummy implementations for development/testing when logic.py is absent
-    def fetch_stock_data(*args, **kwargs): 
-        # st.warning("Dummy fetch_stock_data called."); 
-        return pd.DataFrame()
-    def compute_rsi(*args, **kwargs): 
-        # st.warning("Dummy compute_rsi called."); 
-        return pd.Series([50.0, 55.0]) # Return a series for charting
-    def get_general_financial_advice(*args, **kwargs): 
-        # st.warning("Dummy get_general_financial_advice called."); 
-        return "This is dummy financial advice because `logic.py` could not be loaded."
-    def calculate_savings_goal(target_amount, years, annual_return):
-        # st.warning("Dummy calculate_savings_goal called.");
-        # Simplified dummy calculation for monthly saving needed to reach target_amount from ZERO
-        if years <= 0: # Avoid division by zero
-            return {'monthly_saving': target_amount / 12 if target_amount > 0 else 0.0} 
-        
-        monthly_rate = (annual_return / 100) / 12
-        num_months = years * 12
-        
-        if num_months == 0: 
-            monthly_saving = target_amount # If duration is zero, need to save all immediately
-        elif monthly_rate == 0: # No interest earned
-            monthly_saving = target_amount / num_months
-        else:
-            # Future Value of an Ordinary Annuity (PMT formula)
-            # PMT = FV * r / ((1 + r)^n - 1)
-            # This is a basic approximation for dummy purposes.
-            factor = ((1 + monthly_rate)**num_months - 1) / monthly_rate
-            monthly_saving = target_amount / factor if factor != 0 else target_amount / num_months
-        
-        return {
-            'target_amount': target_amount,
-            'years': years,
-            'annual_return': annual_return,
-            'monthly_saving': monthly_saving
-        }
-    def get_stock_data(*args, **kwargs): 
-        # st.warning("Dummy get_stock_data called."); 
-        return pd.DataFrame({'Date': pd.to_datetime(['2023-01-01', '2023-01-02']), 'AAPL': [150, 152], 'MSFT': [250, 255]}).set_index('Date')
-    def add_technical_indicators(df, symbols): 
-        # st.warning("Dummy add_technical_indicators called."); 
-        return df # Return original df
-    def get_mock_macro_features(*args, **kwargs): 
-        # st.warning("Dummy get_mock_macro_features called."); 
-        return pd.DataFrame()
-    def prepare_model(*args, **kwargs): 
-        # st.warning("Dummy prepare_model called."); 
-        return None # Returns None to indicate no model
-    def predict_stocks(model, scaler_X, scaler_y, combined_scaled, X_test, target_cols, y_test, train_size):
-        # st.warning("Dummy predict_stocks called.");
-        # Provide some dummy prediction results to allow the dashboard to render
-        dummy_predicted = [155.0, 156.0]
-        dummy_actual = [153.0, 154.0]
-        return {'AAPL': {'predicted': dummy_predicted, 'actual': dummy_actual}, 'MSFT': {'predicted': [258.0, 260.0], 'actual': [256.0, 257.0]}}, {} # Return dummy results
-    def fetch_stock_news(*args, **kwargs): 
-        # st.warning("Dummy fetch_stock_news called."); 
-        return "No news available (dummy data)."
-    def get_advice(*args, **kwargs): 
-        # st.warning("Dummy get_advice called."); 
-        return "Generic advice (dummy data)."
-    def calculate_risk(*args, **kwargs): 
-        # st.warning("Dummy calculate_risk called."); 
-        return 5.0
-    def get_strategy(*args, **kwargs): 
-        # st.warning("Dummy get_strategy called."); 
-        return "General strategy (dummy data)."
 
 
 # Configure caching
