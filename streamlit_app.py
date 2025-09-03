@@ -8,6 +8,16 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Import portfolio analytics modules
+from data_models import Portfolio, Holding, MarketData
+from risk_metrics import RiskCalculator
+from portfolio_analytics import PortfolioAnalytics
+from optimization import PortfolioOptimizer
 
 # ------------------------------------------------------------
 # Path safety: make sure local folder is importable
@@ -39,7 +49,7 @@ if not auth_status:
 # 2. Sidebar navigation
 # ------------------------------------------------------------
 st.sidebar.title("📌 Navigate")
-page = st.sidebar.radio("Go to", ["Home", "Stock Dashboard", "Finance Bot", "Goal Planner"])
+page = st.sidebar.radio("Go to", ["Home", "Stock Dashboard", "Portfolio Analytics", "💬 Finance Bot", "Goal Planner"])
 
 
 # ------------------------------------------------------------
@@ -53,10 +63,255 @@ if page == "Home":
         """
         ### What you can do here:
         - 📊 Explore stock market data with interactive charts  
-        - 🤖 Chat with your personal **Finance Bot**  
+        - 🤖 Chat with your personal **💬 Finance Bot**  
         - 🎯 Plan and track your financial goals  
         """
     )
+
+
+# Portfolio Analytics
+elif page == "Portfolio Analytics":
+    st.title("📈 Portfolio Analytics & Risk Management")
+
+    # Initialize session state for portfolio
+    if "portfolio" not in st.session_state:
+        st.session_state.portfolio = None
+    if "market_data" not in st.session_state:
+        st.session_state.market_data = None
+
+    # Portfolio input section
+    st.header("📊 Portfolio Setup")
+
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        portfolio_input = st.text_area(
+            "Enter your portfolio holdings (one per line: SYMBOL,QUANTITY,PURCHASE_PRICE)",
+            value="AAPL,100,150.00\nMSFT,50,250.00\nGOOGL,25,2800.00",
+            height=150,
+            help="Format: SYMBOL,QUANTITY,PURCHASE_PRICE"
+        )
+
+    with col2:
+        benchmark_symbol = st.selectbox(
+            "Benchmark",
+            ["SPY", "QQQ", "IWM", "^GSPC"],
+            index=0,
+            help="Market index for comparison"
+        )
+
+        analyze_portfolio = st.button("🔍 Analyze Portfolio", type="primary")
+
+    if analyze_portfolio:
+        try:
+            # Parse portfolio input
+            holdings = []
+            lines = [line.strip() for line in portfolio_input.split('\n') if line.strip()]
+
+            for line in lines:
+                if ',' in line:
+                    parts = [p.strip() for p in line.split(',')]
+                    if len(parts) >= 3:
+                        symbol = parts[0].upper()
+                        quantity = float(parts[1])
+                        purchase_price = float(parts[2])
+                        holdings.append(Holding(
+                            symbol=symbol,
+                            quantity=quantity,
+                            purchase_price=purchase_price,
+                            current_price=None  # Will be fetched
+                        ))
+
+            if holdings:
+                portfolio = Portfolio("My Portfolio", holdings=holdings, benchmark_symbol=benchmark_symbol)
+
+                # Fetch market data
+                with st.spinner("Fetching market data..."):
+                    symbols = [h.symbol for h in holdings] + [benchmark_symbol]
+                    stock_data = get_stock_data(symbols)
+
+                    if stock_data is not None and not stock_data.empty:
+                        # Create market data object
+                        returns = stock_data.pct_change().dropna()
+                        benchmark_returns = None
+                        if benchmark_symbol in stock_data.columns:
+                            benchmark_returns = stock_data[[benchmark_symbol]].pct_change().dropna()
+
+                        market_data = MarketData(
+                            prices=stock_data,
+                            returns=returns,
+                            benchmark_returns=benchmark_returns
+                        )
+
+                        # Update prices in portfolio
+                        for holding in portfolio.holdings:
+                            if holding.symbol in stock_data.columns:
+                                holding.current_price = stock_data[holding.symbol].iloc[-1]
+
+                        st.session_state.portfolio = portfolio
+                        st.session_state.market_data = market_data
+
+                        st.success("✅ Portfolio analyzed successfully!")
+                    else:
+                        st.error("❌ Failed to fetch market data. Please check symbols.")
+            else:
+                st.error("❌ No valid holdings found. Please check input format.")
+
+        except Exception as e:
+            st.error(f"❌ Error analyzing portfolio: {str(e)}")
+
+    # Display results if portfolio is loaded
+    if st.session_state.portfolio and st.session_state.market_data:
+        portfolio = st.session_state.portfolio
+        market_data = st.session_state.market_data
+
+        # Risk Metrics Dashboard
+        st.header("⚠️ Risk Metrics Dashboard")
+
+        try:
+            risk_metrics = RiskCalculator.calculate_all_risk_metrics(
+                portfolio, market_data, risk_free_rate=0.02
+            )
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                st.metric("VaR (95%)", f"{risk_metrics.var_95:.2%}" if risk_metrics.var_95 else "N/A")
+                st.metric("CVaR (95%)", f"{risk_metrics.cvar_95:.2%}" if risk_metrics.cvar_95 else "N/A")
+
+            with col2:
+                st.metric("Sharpe Ratio", f"{risk_metrics.sharpe_ratio:.2f}" if risk_metrics.sharpe_ratio else "N/A")
+                st.metric("Sortino Ratio", f"{risk_metrics.sortino_ratio:.2f}" if risk_metrics.sortino_ratio else "N/A")
+
+            with col3:
+                st.metric("Max Drawdown", f"{risk_metrics.max_drawdown:.2%}" if risk_metrics.max_drawdown else "N/A")
+                st.metric("Volatility", f"{risk_metrics.volatility:.2%}" if risk_metrics.volatility else "N/A")
+
+            with col4:
+                st.metric("Beta", f"{risk_metrics.beta:.2f}" if risk_metrics.beta else "N/A")
+                st.metric("Alpha", f"{risk_metrics.alpha:.2%}" if risk_metrics.alpha else "N/A")
+
+        except Exception as e:
+            st.error(f"Error calculating risk metrics: {str(e)}")
+            st.info("💡 Tip: Ensure you have sufficient historical data (at least 30 days) for accurate risk calculations.")
+
+        # Portfolio Holdings
+        st.header("📋 Portfolio Holdings")
+
+        holdings_data = []
+        for holding in portfolio.holdings:
+            holdings_data.append({
+                "Symbol": holding.symbol,
+                "Quantity": holding.quantity,
+                "Purchase Price": f"${holding.purchase_price:.2f}",
+                "Current Price": f"${holding.current_price:.2f}" if holding.current_price else "N/A",
+                "Market Value": f"${holding.market_value:,.2f}" if holding.market_value else "N/A",
+                "P&L": f"${holding.unrealized_pnl:,.2f}" if holding.unrealized_pnl else "N/A",
+                "P&L %": f"{holding.unrealized_pnl_percent:.2f}%" if holding.unrealized_pnl_percent else "N/A"
+            })
+
+        st.dataframe(pd.DataFrame(holdings_data), use_container_width=True)
+
+        # Portfolio Summary
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Value", f"${portfolio.total_value:,.2f}")
+        with col2:
+            st.metric("Total Invested", f"${portfolio.total_invested:,.2f}")
+        with col3:
+            st.metric("Total P&L", f"${portfolio.total_unrealized_pnl:,.2f}")
+
+        # Correlation Analysis
+        st.header("🔗 Correlation Analysis")
+
+        try:
+            corr_matrix = PortfolioAnalytics.calculate_correlation_matrix(market_data)
+
+            if not corr_matrix.matrix.empty:
+                # Display correlation heatmap
+                fig, ax = plt.subplots(figsize=(10, 8))
+                sns.heatmap(corr_matrix.matrix, annot=True, cmap='coolwarm', center=0,
+                           square=True, ax=ax)
+                ax.set_title('Portfolio Correlation Heatmap')
+                st.pyplot(fig)
+
+                st.metric("Diversification Score", f"{corr_matrix.diversification_score:.2f}")
+            else:
+                st.info("Not enough data for correlation analysis")
+
+        except Exception as e:
+            st.error(f"Error in correlation analysis: {str(e)}")
+
+        # Performance Attribution
+        st.header("📊 Performance Attribution")
+
+        try:
+            attribution = PortfolioAnalytics.calculate_performance_attribution(
+                portfolio, market_data, benchmark_symbol
+            )
+
+            if attribution.total_return is not None:
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Total Return", f"{attribution.total_return:.2%}")
+                with col2:
+                    st.metric("Benchmark Return", f"{attribution.benchmark_return:.2%}" if attribution.benchmark_return else "N/A")
+                with col3:
+                    st.metric("Excess Return", f"{attribution.excess_return:.2%}" if attribution.excess_return else "N/A")
+
+                if attribution.stock_contributions:
+                    st.subheader("Stock Contributions")
+                    contrib_df = pd.DataFrame(list(attribution.stock_contributions.items()),
+                                            columns=["Symbol", "Contribution"])
+                    st.dataframe(contrib_df, use_container_width=True)
+            else:
+                st.info("Not enough data for performance attribution")
+
+        except Exception as e:
+            st.error(f"Error in performance attribution: {str(e)}")
+
+        # Portfolio Optimization
+        st.header("🎯 Portfolio Optimization")
+
+        try:
+            optimizer = PortfolioOptimizer(market_data, risk_free_rate=0.02)
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if st.button("Maximize Sharpe Ratio"):
+                    result = optimizer.optimize_max_sharpe()
+                    if result.optimal_weights:
+                        st.success("✅ Optimization completed!")
+                        st.subheader("Optimal Portfolio Weights")
+                        weights_df = pd.DataFrame(list(result.optimal_weights.items()),
+                                                columns=["Symbol", "Weight"])
+                        st.dataframe(weights_df, use_container_width=True)
+
+                        col_a, col_b, col_c = st.columns(3)
+                        with col_a:
+                            st.metric("Expected Return", f"{result.expected_return:.2%}")
+                        with col_b:
+                            st.metric("Expected Volatility", f"{result.expected_volatility:.2%}")
+                        with col_c:
+                            st.metric("Sharpe Ratio", f"{result.sharpe_ratio:.2f}")
+                    else:
+                        st.error("❌ Optimization failed")
+
+            with col2:
+                if st.button("Minimum Variance"):
+                    result = optimizer.optimize_minimum_variance()
+                    if result.optimal_weights:
+                        st.success("✅ Optimization completed!")
+                        st.subheader("Minimum Variance Portfolio")
+                        weights_df = pd.DataFrame(list(result.optimal_weights.items()),
+                                                columns=["Symbol", "Weight"])
+                        st.dataframe(weights_df, use_container_width=True)
+                    else:
+                        st.error("❌ Optimization failed")
+
+        except Exception as e:
+            st.error(f"Error in portfolio optimization: {str(e)}")
 
 
 # Stock Dashboard
@@ -90,9 +345,9 @@ elif page == "Stock Dashboard":
     st.plotly_chart(fig2, use_container_width=True)
 
 
-# Finance Bot
-elif page == "Finance Bot":
-    st.title("🤖 Finance Bot")
+# 💬 Finance Bot
+elif page == "💬 Finance Bot":
+    st.title("🤖 💬 Finance Bot")
 
     st.markdown("💬 Ask me about **investments, savings, or stock basics**:")
 
@@ -300,7 +555,7 @@ if "planner_results" not in st.session_state:
     st.session_state["planner_results"] = None # To store the calculated plan for persistence
 
 # Sidebar Navigation
-tab_options = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📊 Stock Dashboard", "💬 Finance Bot", "🎯 Goal Planner"])
+tab_options = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📊 Stock Dashboard", "📈 Portfolio Analytics", "� 💬 Finance Bot", "🎯 Goal Planner"])
 
 # Home Tab
 if tab_options == "🏠 Home":
@@ -532,9 +787,9 @@ elif tab_options == "📊 Stock Dashboard":
                     st.experimental_rerun()
 
 
-# Finance Bot Tab
-elif tab_options == "💬 Finance Bot":
-    st.subheader("💬 Ask Gemini Finance Bot")
+# 💬 Finance Bot Tab
+elif tab_options == "💬 💬 Finance Bot":
+    st.subheader("💬 Ask Gemini 💬 Finance Bot")
     query = st.text_input("🔍 Ask a financial question", key="general_query")
     if st.button("Get Advice"):
         if query:
@@ -933,10 +1188,9 @@ st.markdown("""
     </p>
     <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
         <small style="color: #666;">
-            Features: Stock Prediction | Technical Analysis | AI Chatbot | Dynamic Goal Planner
+            Features: Stock Prediction | Technical Analysis | AI Chatbot | Dynamic Goal Planner | Portfolio Analytics & Risk Management
         </small>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-main()  
