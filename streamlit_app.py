@@ -8,6 +8,16 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Import portfolio analytics modules
+from data_models import Portfolio, Holding, MarketData
+from risk_metrics import RiskCalculator
+from portfolio_analytics import PortfolioAnalytics
+from optimization import PortfolioOptimizer
 
 # ------------------------------------------------------------
 # Path safety: make sure local folder is importable
@@ -176,8 +186,8 @@ elif page == "Stock Dashboard":
     st.plotly_chart(fig2, use_container_width=True)
 
 
-# Finance Bot
-elif page == "Finance Bot":
+# 💬 Finance Bot
+elif page == "💬 Finance Bot":
     st.title("🤖 Finance Bot")
 
     st.markdown("💬 Ask me about **investments, savings, or stock basics**:")
@@ -524,7 +534,7 @@ elif tab_options == "📊 Stock Dashboard":
                     st.experimental_rerun()
 
 
-# Finance Bot Tab
+# 💬 Finance Bot Tab
 elif tab_options == "💬 Finance Bot":
     st.subheader("💬 Ask Gemini Finance Bot")
     query = st.text_input("🔍 Ask a financial question", key="general_query")
@@ -931,4 +941,3 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-main()  
