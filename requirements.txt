@@ -13,3 +13,4 @@ google-generativeai
 scipy
 cvxpy
 seaborn
+scipy
