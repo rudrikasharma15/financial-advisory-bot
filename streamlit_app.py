@@ -508,7 +508,7 @@ def _simulate_goal_growth(
 
 # Goal Planner Tab (Dynamic Version)
 if tab_options == "🎯 Goal Planner":
-    st.markdown("## 🎯 Financial Goal Planner: Your Journey to Financial Freedom")
+    st.markdown("## 🎯 Personal Finance Planner")
     st.markdown("Set your financial aspirations and let's calculate a dynamic plan to achieve them! See how your savings grow and explore different scenarios.")
 
     st.subheader("📝 Define Your Goal")
