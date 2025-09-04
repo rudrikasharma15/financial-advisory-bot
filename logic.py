@@ -172,13 +172,25 @@ def prepare_model(symbols, stock_data, lookback=LOOKBACK):
 
     return model, scaler_X, scaler_y, combined, X_test, target_cols, y_test, split
 
-def predict_stocks(model, scaler_y, combined, X_test, target_cols, y_test, train_size):
+def predict_stocks(model, scaler_X, scaler_y, combined_scaled, X_test, target_cols, y_test, train_size):
+    """Predict stock prices and return results in expected format."""
+    if model is None:
+        return {}, {}
+    
     preds = model.predict(X_test)
     pred_unscaled = pd.DataFrame(scaler_y.inverse_transform(preds), columns=target_cols)
     actual_unscaled = pd.DataFrame(scaler_y.inverse_transform(y_test), columns=target_cols)
-    idx = combined.index[train_size+LOOKBACK:]
+    idx = combined_scaled.index[train_size+LOOKBACK:]
     pred_unscaled.index = idx
     actual_unscaled.index = idx
+
+    # Format results as expected by streamlit app
+    results = {}
+    for sym in target_cols:
+        results[sym] = {
+            'predicted': pred_unscaled[sym].tolist(),
+            'actual': actual_unscaled[sym].tolist()
+        }
 
     evaluation = {}
     for sym in target_cols:
@@ -187,15 +199,35 @@ def predict_stocks(model, scaler_y, combined, X_test, target_cols, y_test, train
             "MAE": mean_absolute_error(actual_unscaled[sym], pred_unscaled[sym]),
             "R2": r2_score(actual_unscaled[sym], pred_unscaled[sym])
         }
-    return pred_unscaled, actual_unscaled, evaluation
+    return results, evaluation
 
 # ------------------ CHATBOT & UTILITIES ------------------
 
-def get_general_financial_advice(query: str, context: str = "") -> str:
+def get_general_financial_advice(query: str, symbols: List[str] = None, stock_data: pd.DataFrame = None, results: Dict = None) -> str:
     """Use Gemini to get financial advice."""
     if not genai:
-        return "Gemini API not available."
-    prompt = f"Context:\n{context}\n\nUser query: {query}"
+        return "Gemini API not available. Please configure GEMINI_API_KEY in your environment."
+    
+    # Build context from available data
+    context_parts = []
+    if symbols:
+        context_parts.append(f"Stocks being analyzed: {', '.join(symbols)}")
+    if stock_data is not None and not stock_data.empty:
+        latest_prices = {sym: stock_data[sym].iloc[-1] for sym in stock_data.columns if sym in symbols}
+        context_parts.append(f"Latest prices: {latest_prices}")
+    if results:
+        context_parts.append(f"Prediction results available for: {list(results.keys())}")
+    
+    context = "\n".join(context_parts) if context_parts else "General financial advice requested."
+    prompt = f"""You are a financial advisor. Provide helpful, accurate financial advice based on the following context:
+
+Context:
+{context}
+
+User Query: {query}
+
+Please provide practical, actionable financial advice. If this is about specific stocks, mention that this is not financial advice and users should consult with qualified financial professionals."""
+    
     try:
         res = genai.GenerativeModel("gemini-1.5-pro-latest").generate_content(prompt)
         return res.text.strip()
@@ -219,3 +251,44 @@ def get_mock_macro_features(dates):
 
 def translate_response(text, lang="en"):
     return GoogleTranslator(source="auto", target=lang).translate(text)
+
+# ------------------ ADDITIONAL FUNCTIONS FOR STREAMLIT APP ------------------
+
+def get_advice(predicted_prices):
+    """Generate investment advice based on predicted prices."""
+    if not predicted_prices or len(predicted_prices) == 0:
+        return "No prediction data available for advice."
+    
+    latest_price = predicted_prices[-1] if isinstance(predicted_prices, list) else predicted_prices
+    if latest_price > 0:
+        return f"Based on current predictions, consider monitoring market trends and consulting with a financial advisor for personalized investment decisions."
+    return "Unable to generate advice with current data."
+
+def calculate_risk(symbol, stock_data, results):
+    """Calculate risk score for a stock (1-10 scale)."""
+    try:
+        if symbol not in stock_data.columns:
+            return 5.0  # Default medium risk
+        
+        price_series = stock_data[symbol].dropna()
+        if len(price_series) < 2:
+            return 5.0
+        
+        # Calculate volatility as risk indicator
+        returns = price_series.pct_change().dropna()
+        volatility = returns.std() * np.sqrt(252)  # Annualized volatility
+        
+        # Convert volatility to 1-10 risk scale
+        risk_score = min(10, max(1, volatility * 20))
+        return round(risk_score, 1)
+    except Exception:
+        return 5.0  # Default medium risk
+
+def get_strategy(advice, risk_score):
+    """Generate investment strategy based on advice and risk."""
+    if risk_score >= 7:
+        return f"⚠️ High Risk Strategy: {advice} Consider conservative investments and diversification."
+    elif risk_score >= 4:
+        return f"⚖️ Moderate Risk Strategy: {advice} Balanced approach recommended."
+    else:
+        return f"✅ Low Risk Strategy: {advice} Suitable for conservative investors."
