@@ -150,9 +150,13 @@ def load_stock_data(symbols: List[str]) -> Optional[pd.DataFrame]:
         return None
     try:
         with st.spinner("📡 Fetching market data..."):
-            return get_stock_data(symbols)
+            data = get_stock_data(symbols)
+            if data is None or data.empty:
+                st.warning("⚠️ No data available for the specified symbols. Please check if the symbols are correct.")
+            return data
     except Exception as e:
         st.error(f"⚠️ Error fetching stock data: {str(e)}")
+        st.info("💡 Try checking your internet connection or using different stock symbols.")
         return None
 
 @st.cache_data(ttl=300, show_spinner=False)
