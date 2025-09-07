@@ -1,1 +1,14 @@
-{"sagnik456": "2468a22468a2", "Padma": "Himanshi", "Sia": "Sia"}
+{
+  "sagnik456": {
+    "password": "2468a22468a2",
+    "email": "sagnik456@example.com"
+  },
+  "Padma": {
+    "password": "Himanshi",
+    "email": "Padma@example.com"
+  },
+  "Sia": {
+    "password": "Sia",
+    "email": "Sia@example.com"
+  }
+}
