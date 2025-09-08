@@ -29,18 +29,112 @@ if _base_dir not in sys.path:
     sys.path.append(_base_dir)
 
 # Import your login system
-from auth import auth_component
-
+from auth import auth_component, verify_reset_token, reset_password_with_token
 
 # ------------------------------------------------------------
-# 1. Login / Signup first
+# 1. Handle Password Reset from Reset Link (MUST be first after page config)
+# ------------------------------------------------------------
+query_params = st.query_params
+if 'reset_token' in query_params:
+    reset_token = query_params['reset_token']
+    
+    # Clear the URL to prevent confusion
+    if st.button("🏠 Return to Home", help="Clear reset token from URL"):
+        st.query_params.clear()
+        st.rerun()
+    
+    st.title("🔐 Reset Your Password")
+    st.markdown("---")
+    
+    # Verify token first
+    is_valid, result = verify_reset_token(reset_token)
+    
+    if not is_valid:
+        st.error(f"❌ {result}")
+        st.info("The reset link may be expired or invalid. Please request a new one.")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔑 Go to Login Page", type="primary"):
+                st.query_params.clear()
+                st.rerun()
+        with col2:
+            if st.button("🔐 Request New Reset Link"):
+                st.query_params.clear()
+                st.session_state.show_forgot_password = True
+                st.rerun()
+    else:
+        username = result
+        st.success(f"✅ Verified! Resetting password for user: **{username}**")
+        
+        with st.form("reset_password_form"):
+            st.subheader("Enter Your New Password")
+            new_password = st.text_input("New Password", type="password", 
+                                       help="Choose a strong password (minimum 4 characters)")
+            confirm_password = st.text_input("Confirm New Password", type="password")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                submit_reset = st.form_submit_button("🔄 Reset Password", type="primary", use_container_width=True)
+            with col2:
+                cancel_reset = st.form_submit_button("❌ Cancel", use_container_width=True)
+            
+            if submit_reset:
+                if not new_password or not confirm_password:
+                    st.error("⚠️ Please fill in both password fields.")
+                elif new_password != confirm_password:
+                    st.error("⚠️ Passwords do not match.")
+                elif len(new_password) < 4:
+                    st.error("⚠️ Password must be at least 4 characters long.")
+                else:
+                    success, message = reset_password_with_token(reset_token, new_password)
+                    if success:
+                        st.success("✅ Password reset successful!")
+                        st.balloons()  # Celebration effect
+                        st.success("You can now login with your new password.")
+                        
+                        # Clear query params and redirect to main app
+                        time.sleep(2)  # Give user time to read success message
+                        st.query_params.clear()
+                        st.rerun()
+                    else:
+                        st.error(f"❌ {message}")
+            
+            elif cancel_reset:
+                st.query_params.clear()
+                st.rerun()
+        
+        # Additional info
+        st.markdown("---")
+        st.info("💡 **Tip:** After resetting your password, you'll be redirected to the login page.")
+        
+        # Emergency back to login
+        if st.button("⬅️ Back to Login (Cancel Reset)"):
+            st.query_params.clear()
+            st.rerun()
+    
+    st.stop()  # Stop here, don't show the rest of the app
+
+# ------------------------------------------------------------
+# 2. Login / Signup with In-App Reset functionality
 # ------------------------------------------------------------
 auth_status = auth_component()
 
 if not auth_status:
-    st.warning("Please login to access the app 🚪")
+    # Show a welcome message while not logged in
+    st.markdown("""
+    <div style='text-align: center; padding: 20px; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); border-radius: 10px; margin: 20px 0;'>
+        <h2 style='color: white; margin: 0;'>Welcome to Artha.ai 💼</h2>
+        <p style='color: #f0f0f0; margin: 10px 0 0 0;'>Your AI-Powered Financial Advisory Platform</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.warning("Please login to access the financial dashboard 🚪")
     st.stop()
 
+# ------------------------------------------------------------
+# Main Application Code (Rest of your existing code)
+# ------------------------------------------------------------
             
 import streamlit as st
 import pandas as pd
@@ -189,7 +283,6 @@ if "planner_results" not in st.session_state:
     st.session_state["planner_results"] = None # To store the calculated plan for persistence
 
 # Sidebar Navigation
-# Sidebar Navigation
 tab_options = st.sidebar.radio(
     "🔎 Navigate",
     [
@@ -216,7 +309,10 @@ elif tab_options == "💼 Portfolio Tracker":
 elif tab_options == "💸 SIP and Lumpsum Calculator":
     st.sidebar.success("💸 Calculating SIP & Lumpsum")
 
-
+# Add current user info in sidebar
+if st.session_state.get("current_user"):
+    st.sidebar.markdown("---")
+    st.sidebar.info(f"👤 Logged in as: **{st.session_state.current_user}**")
 
 # Home Tab
 if tab_options == "🏠 Home":
@@ -652,19 +748,20 @@ if tab_options == "🎯 Goal Planner":
         import io
 
         # Register the font (make sure DejaVuSans.ttf is in the same folder or give full path)
-        pdfmetrics.registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
-
-        # Define styles using your registered font
-        styles = getSampleStyleSheet()
-        styles['Normal'].fontName = 'DejaVuSans'
-        styles['Heading1'].fontName = 'DejaVuSans'
-        styles['Heading2'].fontName = 'DejaVuSans'
-        styles['Heading3'].fontName = 'DejaVuSans'
-
+        try:
+            pdfmetrics.registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
+            # Define styles using your registered font
+            styles = getSampleStyleSheet()
+            styles['Normal'].fontName = 'DejaVuSans'
+            styles['Heading1'].fontName = 'DejaVuSans'
+            styles['Heading2'].fontName = 'DejaVuSans'
+            styles['Heading3'].fontName = 'DejaVuSans'
+        except:
+            # Fallback to default fonts if custom font is not available
+            styles = getSampleStyleSheet()
 
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter)
-        # styles = getSampleStyleSheet()
         elements = []
 
         elements.append(Paragraph("Investment Analysis", styles['Heading1']))
@@ -705,7 +802,6 @@ if tab_options == "🎯 Goal Planner":
 
 
 # Portfolio Tracking Tab
-
 if tab_options == "💼 Portfolio Tracker":
     st.markdown("## 💼 Portfolio Tracker")
 
@@ -815,7 +911,9 @@ if tab_options == "💼 Portfolio Tracker":
 
     else:
         st.info("➕ Add holdings above to start tracking your portfolio.")
-if tab_options=="💸 SIP and Lumpsum Calculator":
+
+# SIP and Lumpsum Calculator Tab
+if tab_options == "💸 SIP and Lumpsum Calculator":
     st.markdown("## 📈 SIP & Lumpsum Investment Calculator")
     st.markdown("Compare and visualize your investment outcomes using SIP and Lumpsum options with projected returns.")
 
@@ -881,76 +979,6 @@ if tab_options=="💸 SIP and Lumpsum Calculator":
         )
 
         st.plotly_chart(fig, use_container_width=True)
-
-
-if tab_options=="💸 SIP and Lumpsum Calculator":
-    st.markdown("## 📈 SIP & Lumpsum Investment Calculator")
-    st.markdown("Compare and visualize your investment outcomes using SIP and Lumpsum options with projected returns.")
-
-    st.subheader("💡 Investment Inputs")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        investment_type = st.radio("Choose Investment Type:", ["SIP", "Lumpsum"], horizontal=True)
-
-    with col2:
-        annual_return = st.slider("Expected Annual Return (%)", min_value=1, max_value=20, value=12)
-    
-    if investment_type == "SIP":
-        col_sip1, col_sip2 = st.columns(2)
-        with col_sip1:
-            monthly_investment = st.number_input("💰 Monthly Investment (₹)", min_value=500.0, value=5000.0, step=100.0)
-        with col_sip2:
-            duration_years = st.slider("⏳ Investment Duration (Years)", 1, 40, 10)
-    else:
-        col_lump1, col_lump2 = st.columns(2)
-        with col_lump1:
-            lumpsum_amount = st.number_input("💰 Lumpsum Amount (₹)", min_value=500.0, value=100000.0, step=500.0)
-        with col_lump2:
-            duration_years = st.slider("⏳ Investment Duration (Years)", 1, 40, 10)
-    
-    # Calculate returns
-    calculate_btn = st.button("📊 Calculate Returns")
-    if calculate_btn:
-        r = annual_return / 100
-        n = duration_years
-
-        if investment_type == "SIP":
-            fv = monthly_investment * (((1 + r / 12) ** (n * 12) - 1) * (1 + r / 12)) / (r / 12)
-            total_invested = monthly_investment * n * 12
-        else:
-            fv = lumpsum_amount * ((1 + r) ** n)
-            total_invested = lumpsum_amount
-
-        interest_earned = fv - total_invested
-
-        # Display metrics
-        st.subheader("📈 Investment Summary")
-        col_a, col_b, col_c = st.columns(3)
-        with col_a:
-            st.metric("Total Invested", f"₹{total_invested:,.2f}")
-        with col_b:
-            st.metric("Total Returns", f"₹{fv:,.2f}")
-        with col_c:
-            st.metric("Interest Earned", f"₹{interest_earned:,.2f}")
-
-        # Donut chart
-        fig = go.Figure(data=[go.Pie(
-            labels=["Invested", "Interest Earned"],
-            values=[total_invested, interest_earned],
-            hole=.5,
-            marker=dict(colors=["#10b981", "#6366f1"])
-        )])
-
-        fig.update_layout(
-            title="📊 Investment Composition",
-            showlegend=True,
-            template="plotly_dark"
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-
 
 # --- Footer ---
 st.markdown("---")
@@ -963,14 +991,13 @@ st.markdown("""
     </p>
     <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
         <small style="color: #666;">
-            Features: Stock Prediction | Technical Analysis | AI Chatbot | Dynamic Goal Planner
+            Features: Stock Prediction | Technical Analysis | AI Chatbot | Dynamic Goal Planner | In-App Password Reset
         </small>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-
-import streamlit as st
+# Hide Streamlit style
 hide_streamlit_style = """
     <style>
     #MainMenu {visibility: hidden;}
@@ -979,19 +1006,3 @@ hide_streamlit_style = """
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
