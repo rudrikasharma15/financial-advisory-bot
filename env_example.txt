@@ -1,0 +1,12 @@
+# API Keys for Financial Advisory Bot
+# Copy this file to .env and add your actual API keys
+
+# Google Gemini AI API Key (Required for AI chatbot functionality)
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# News API Key (Optional, for stock news functionality)
+NEWS_API_KEY=your_news_api_key_here
+
+# Streamlit Configuration
+STREAMLIT_SERVER_PORT=8501
+STREAMLIT_SERVER_ADDRESS=0.0.0.0
