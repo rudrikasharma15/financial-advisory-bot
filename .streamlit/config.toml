@@ -1,0 +1,9 @@
+[theme]
+base = "dark"
+primaryColor = "#6366F1"          # Indigo
+backgroundColor = "#0B1220"       # Deep navy
+secondaryBackgroundColor = "#111827" # Slate
+textColor = "#E5E7EB"             # Light gray
+font = "sans serif"
+
+

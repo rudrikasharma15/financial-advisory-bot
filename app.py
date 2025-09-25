@@ -16,6 +16,47 @@ st.set_page_config(
     layout="wide"
 )
 
+# --- Global UI Styles & Sidebar Branding ---
+st.markdown(
+    """
+    <style>
+      /* Background gradient and typography */
+      .stApp {
+        background: radial-gradient(1200px 600px at 10% 10%, rgba(99,102,241,0.08), transparent),
+                    radial-gradient(1000px 500px at 90% 0%, rgba(16,185,129,0.06), transparent),
+                    linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.06));
+      }
+      /* Cards */
+      .artha-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 16px 18px;
+        backdrop-filter: blur(8px);
+      }
+      /* Headings */
+      .artha-h2 { font-weight: 700; letter-spacing: .2px; }
+      /* Sidebar */
+      section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, rgba(17,24,39,0.85), rgba(17,24,39,0.75));
+        border-right: 1px solid rgba(255,255,255,0.08);
+      }
+      /* Buttons */
+      .stButton>button {
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: linear-gradient(180deg, #1f2937, #111827);
+      }
+      .stButton>button:hover { filter: brightness(1.05); }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+with st.sidebar:
+    st.markdown("### Finance Suite")
+    st.write("Empowering your financial decisions with data and AI.")
+
 # ------------------------------------------------------------
 # Path safety: make sure local folder is importable
 # ------------------------------------------------------------
@@ -199,7 +240,8 @@ tab_options = st.sidebar.radio(
         "🎯 Goal Planner",
         "💼 Portfolio Tracker",
         "💸 SIP and Lumpsum Calculator"
-    ]
+    ],
+    key="nav_radio"
 )
 
 # Highlight Active Page
@@ -220,18 +262,51 @@ elif tab_options == "💸 SIP and Lumpsum Calculator":
 
 # Home Tab
 if tab_options == "🏠 Home":
-    st.markdown("## 🏠 Welcome")
-    st.markdown("""
-    <div style='font-size:18px;'>
-        Welcome to the <b>Artha.ai</b>. This tool helps you:
-        <ul>
-            <li>💹 Predict future stock prices using deep learning</li>
-            <li>📈 Analyze RSI, trends, and risks</li>
-            <li>🧠 Get personalized advice via Gemini AI</li>
-            <li>🎯 Plan your savings based on your financial goals</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        """
+        <style>
+          .hero {
+            padding: 28px 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background:
+              radial-gradient(800px 200px at 0% 0%, rgba(99,102,241,0.25), transparent),
+              radial-gradient(700px 200px at 100% 0%, rgba(16,185,129,0.25), transparent),
+              rgba(255,255,255,0.03);
+            position: relative;
+            overflow: hidden;
+          }
+          .hero:after{
+            content: "";
+            position: absolute; inset: -25%;
+            background: conic-gradient(from 180deg at 50% 50%, rgba(99,102,241,0.08), rgba(16,185,129,0.08), rgba(99,102,241,0.08));
+            filter: blur(40px);
+            animation: spin 18s linear infinite;
+          }
+          @keyframes spin { to { transform: rotate(360deg); } }
+          .gradient-title { 
+            font-size: 28px; font-weight: 800; margin: 0 0 6px 0; 
+            background: linear-gradient(90deg, #a78bfa, #34d399);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+          }
+          .muted {opacity:.9;}
+          .feature-grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;}
+          .feature { padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); }
+        </style>
+        <div class="hero">
+          <div class="gradient-title">Your personal finance copilot</div>
+          <p class="muted">Analyze markets, plan goals, and get AI-powered insights — all in one place.</p>
+        </div>
+        <div style="height:14px"></div>
+        <div class="feature-grid">
+          <div class="feature">💹 Predict future stock prices using deep learning</div>
+          <div class="feature">📈 Analyze RSI, trends, and risks</div>
+          <div class="feature">🧠 Get personalized advice with Gemini AI</div>
+          <div class="feature">🎯 Plan goals and export polished reports</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # Stock Dashboard Tab
 elif tab_options == "📊 Stock Dashboard":
@@ -262,9 +337,9 @@ elif tab_options == "📊 Stock Dashboard":
 
     col1, col2 = st.columns([1, 3])
     with col1:
-        analyze_btn = st.button("🔍 Analyze", use_container_width=True)
+        analyze_btn = st.button("🔍 Analyze", key="analyze_btn")
     with col2:
-        if st.button("🔄 Refresh Data", use_container_width=True):
+        if st.button("🔄 Refresh Data", key="refresh_btn"):
             load_stock_data.clear()
             process_stock_data.clear()
             st.session_state.stock_data = None
@@ -341,7 +416,7 @@ elif tab_options == "📊 Stock Dashboard":
                             "Predicted": predicted,
                             "Actual": actual
                         }, index=stock_data.index[chart_index_start:chart_index_start + len(predicted)]) # Ensure index slice is correct
-                        st.line_chart(chart_data, use_container_width=True)
+                        st.line_chart(chart_data, width='stretch')
                     else:
                         st.info("Not enough valid data for price prediction chart for this symbol.")
 
@@ -373,7 +448,7 @@ elif tab_options == "📊 Stock Dashboard":
 
                 with st.expander(f"📊 RSI History - {symbol}"):
                     if not rsi.empty:
-                        st.line_chart(rsi)
+                        st.line_chart(rsi, width='stretch')
                     else:
                         st.info("RSI data not available for this symbol.")
 
@@ -803,7 +878,7 @@ if tab_options == "💼 Portfolio Tracker":
         if total_value > 0:
             fig_alloc = px.pie(df, values="Current Value", names="symbol", 
                               title="Portfolio Allocation by Symbol")
-            st.plotly_chart(fig_alloc, use_container_width=True)
+            st.plotly_chart(fig_alloc, width='stretch')
 
         # Download option for portfolio CSV
         csv_data = df.to_csv(index=False)
@@ -880,7 +955,7 @@ if tab_options=="💸 SIP and Lumpsum Calculator":
             template="plotly_dark"
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
 
 if tab_options=="💸 SIP and Lumpsum Calculator":
@@ -891,26 +966,26 @@ if tab_options=="💸 SIP and Lumpsum Calculator":
 
     col1, col2 = st.columns(2)
     with col1:
-        investment_type = st.radio("Choose Investment Type:", ["SIP", "Lumpsum"], horizontal=True)
+        investment_type = st.radio("Choose Investment Type:", ["SIP", "Lumpsum"], horizontal=True, key="sip_investment_type")
 
     with col2:
-        annual_return = st.slider("Expected Annual Return (%)", min_value=1, max_value=20, value=12)
+        annual_return = st.slider("Expected Annual Return (%)", min_value=1, max_value=20, value=12, key="sip_annual_return")
     
     if investment_type == "SIP":
         col_sip1, col_sip2 = st.columns(2)
         with col_sip1:
-            monthly_investment = st.number_input("💰 Monthly Investment (₹)", min_value=500.0, value=5000.0, step=100.0)
+            monthly_investment = st.number_input("💰 Monthly Investment (₹)", min_value=500.0, value=5000.0, step=100.0, key="sip_monthly")
         with col_sip2:
-            duration_years = st.slider("⏳ Investment Duration (Years)", 1, 40, 10)
+            duration_years = st.slider("⏳ Investment Duration (Years)", 1, 40, 10, key="sip_years")
     else:
         col_lump1, col_lump2 = st.columns(2)
         with col_lump1:
-            lumpsum_amount = st.number_input("💰 Lumpsum Amount (₹)", min_value=500.0, value=100000.0, step=500.0)
+            lumpsum_amount = st.number_input("💰 Lumpsum Amount (₹)", min_value=500.0, value=100000.0, step=500.0, key="lump_amount")
         with col_lump2:
-            duration_years = st.slider("⏳ Investment Duration (Years)", 1, 40, 10)
+            duration_years = st.slider("⏳ Investment Duration (Years)", 1, 40, 10, key="lump_years")
     
     # Calculate returns
-    calculate_btn = st.button("📊 Calculate Returns")
+    calculate_btn = st.button("📊 Calculate Returns", key="sip_calc")
     if calculate_btn:
         r = annual_return / 100
         n = duration_years
@@ -948,7 +1023,7 @@ if tab_options=="💸 SIP and Lumpsum Calculator":
             template="plotly_dark"
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
 
 

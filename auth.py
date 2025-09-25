@@ -45,19 +45,54 @@ def auth_component():
             st.rerun()
         return True
 
+    # Hero/Background
+    st.markdown(
+        """
+        <style>
+          .auth-hero {
+            background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(16,185,129,0.12));
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+          }
+          .auth-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 18px 20px;
+            backdrop-filter: blur(8px);
+          }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div class="auth-hero">
+          <h3 style="margin:0;">Welcome to Artha.ai</h3>
+          <p style="margin:6px 0 0 0; opacity:.9;">Securely login or create your account to continue.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     # Tabs for login/signup
     tabs = st.tabs(["🔑 Login", "📝 Sign Up"])
 
     # --- LOGIN ---
     with tabs[0]:
         st.subheader("Login to your account")
-        username = st.text_input("Username", key="login_user")
-        password = st.text_input("Password", type="password", key="login_pass")
+        with st.container():
+            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
+            username = st.text_input("Username", key="login_user")
+            password = st.text_input("Password", type="password", key="login_pass")
 
         question, answer = get_captcha()
         captcha_input = st.text_input("Captcha: " + question, key="login_captcha")
 
-        if st.button("Login"):
+        if st.button("Login", key="login_btn"):
             if captcha_input.strip() != str(answer):
                 st.error("⚠️ Captcha incorrect!")
                 # Refresh captcha
@@ -71,17 +106,19 @@ def auth_component():
                     st.rerun()
                 else:
                     st.error("❌ Invalid username or password")
+            st.markdown("</div>", unsafe_allow_html=True)
 
     # --- SIGNUP ---
     with tabs[1]:
         st.subheader("Create a new account")
+        st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
         new_user = st.text_input("Choose a username", key="signup_user")
         new_pass = st.text_input("Choose a password", type="password", key="signup_pass")
 
         question, answer = get_captcha()
         captcha_input = st.text_input("Captcha: " + question, key="signup_captcha")
 
-        if st.button("Sign Up"):
+        if st.button("Sign Up", key="signup_btn"):
             if captcha_input.strip() != str(answer):
                 st.error("⚠️ Captcha incorrect!")
                 # Refresh captcha
@@ -96,4 +133,5 @@ def auth_component():
                     st.session_state.users[new_user] = new_pass
                     save_users(st.session_state.users)
                     st.success("🎉 Account created! You can now login.")
+        st.markdown("</div>", unsafe_allow_html=True)
     return False
